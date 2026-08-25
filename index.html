@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎬 Nosso Cinema</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" onerror="window.__chartLoadFailed = true;"></script>
+<style>
+  :root{
+    --bg: #0b0d12;
+    --bg-elev: #12151c;
+    --bg-elev-2: #171b24;
+    --border: #262b36;
+    --text: #eef0f4;
+    --text-dim: #9aa1b2;
+    --text-faint: #656d80;
+    --accent: #e6b04a;
+    --gabrielle: #e0568c;
+    --pericles: #4aa8e6;
+    --ok: #4ac98a;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body{
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(230,176,74,0.06), transparent 45%),
+      radial-gradient(circle at 90% 10%, rgba(74,168,230,0.06), transparent 40%);
+    background-attachment: fixed;
+    padding-bottom: 60px;
+  }
+
+  .wrap{
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 32px 20px 0;
+  }
+
+  header.top{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  header.top h1{
+    font-size: 28px;
+    margin:0;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+
+  header.top .subtitle{
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  .legend-pair{
+    display:flex;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .legend-pair span{ display:flex; align-items:center; gap:6px; }
+  .dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .dot.g{ background: var(--gabrielle); }
+  .dot.p{ background: var(--pericles); }
+
+  /* KPI GRID */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 980px){ .kpi-grid{ grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 600px){ .kpi-grid{ grid-template-columns: repeat(2, 1fr); } }
+
+  .kpi-card{
+    background: linear-gradient(180deg, var(--bg-elev), var(--bg-elev-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    box-shadow: var(--shadow);
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .kpi-card:hover{ transform: translateY(-2px); border-color:#333a49; }
+
+  .kpi-card .label{
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .kpi-card .value{
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .kpi-card .value.small{ font-size: 24px; }
+  .kpi-card.gabrielle .value{ color: var(--gabrielle); }
+  .kpi-card.pericles .value{ color: var(--pericles); }
+  .kpi-card.casal .value{ color: var(--accent); }
+
+  section{ margin-bottom: 28px; }
+
+  .section-title{
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin: 0 0 14px 2px;
+  }
+
+  /* CHARTS */
+  .chart-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px){ .chart-grid{ grid-template-columns: 1fr; } }
+
+  .chart-card{
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+  }
+  .chart-card h3{
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .chart-card .chart-sub{
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-bottom: 12px;
+  }
+  .chart-card canvas{ max-height: 280px; }
+  .chart-card.tall canvas{ max-height: 340px; }
+
+  .empty-note{
+    color: var(--text-faint);
+    font-size: 13px;
+    text-align:center;
+    padding: 40px 10px;
+  }
+
+  /* FILTERS */
+  .filters{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .filters .field{
+    display:flex;
+    flex-direction:column;
+    gap: 5px;
+    flex: 1 1 160px;
+    min-width: 150px;
+  }
+  .filters label{
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-weight:600;
+  }
+  .filters select, .filters input[type="text"]{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s ease;
+  }
+  .filters select:focus, .filters input:focus{ border-color: var(--accent); }
+
+  .filters .field.search{ flex: 2 1 220px; }
+
+  .btn-clear{
+    align-self: flex-end;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 9px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s ease;
+    white-space: nowrap;
+  }
+  .btn-clear:hover{ border-color: var(--accent); color: var(--accent); }
+
+  /* TABLE */
+  .table-wrap{
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .table-scroll{
+    overflow-x: auto;
+    max-height: 560px;
+    overflow-y: auto;
+  }
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  thead th{
+    position: sticky;
+    top:0;
+    background: var(--bg-elev-2);
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th:hover{ color: var(--accent); }
+  thead th .arrow{ margin-left: 4px; opacity: .6; font-size: 10px; }
+  tbody td{
+    padding: 11px 14px;
+    border-bottom: 1px solid #1c202a;
+    white-space: nowrap;
+  }
+  tbody tr:hover{ background: rgba(255,255,255,0.02); }
+  tbody tr:last-child td{ border-bottom: none; }
+
+  .badge{
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+  .badge.visto{ background: rgba(74,201,138,0.15); color: var(--ok); }
+  .badge.pendente{ background: rgba(255,255,255,0.06); color: var(--text-dim); }
+
+  .note-g{ color: var(--gabrielle); font-weight: 600; }
+  .note-p{ color: var(--pericles); font-weight: 600; }
+  .note-avg{ color: var(--accent); font-weight: 700; }
+  .muted{ color: var(--text-faint); }
+
+  .table-footer{
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+  }
+
+  /* HIGHLIGHTS */
+  .highlight-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 900px){ .highlight-grid{ grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px){ .highlight-grid{ grid-template-columns: 1fr; } }
+
+  .hl-card{
+    background: linear-gradient(160deg, var(--bg-elev), var(--bg-elev-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+  }
+  .hl-card .hl-icon{ font-size: 20px; margin-bottom: 8px; }
+  .hl-card .hl-label{
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-faint);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .hl-card .hl-value{
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .hl-card .hl-detail{
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  footer.app-footer{
+    text-align:center;
+    color: var(--text-faint);
+    font-size: 12px;
+    margin-top: 40px;
+  }
+
+  ::-webkit-scrollbar{ width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track{ background: transparent; }
+  ::-webkit-scrollbar-thumb{ background: #262b36; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover{ background: #333a49; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>🎬 Nosso Cinema</h1>
+      <div class="subtitle">Histórico e planos de filmes — Gabrielle &amp; Péricles</div>
+    </div>
+    <div class="legend-pair">
+      <span><span class="dot g"></span>Gabrielle</span>
+      <span><span class="dot p"></span>Péricles</span>
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <section>
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card">
+        <div class="label">Total de filmes</div>
+        <div class="value" id="kpiTotal">-</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Assistidos</div>
+        <div class="value" id="kpiAssistidos">-</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Pendentes</div>
+        <div class="value" id="kpiPendentes">-</div>
+      </div>
+      <div class="kpi-card gabrielle">
+        <div class="label">Média Gabrielle</div>
+        <div class="value small" id="kpiMediaG">-</div>
+      </div>
+      <div class="kpi-card pericles">
+        <div class="label">Média Péricles</div>
+        <div class="value small" id="kpiMediaP">-</div>
+      </div>
+      <div class="kpi-card casal">
+        <div class="label">Média do casal</div>
+        <div class="value small" id="kpiMediaCasal">-</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRAFICOS -->
+  <section>
+    <div class="section-title">Análises</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Assistidos x Pendentes</h3>
+        <div class="chart-sub">Status geral da lista</div>
+        <canvas id="chartStatus"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Filmes por gênero</h3>
+        <div class="chart-sub">Quantidade de filmes em cada gênero</div>
+        <canvas id="chartGenero"></canvas>
+      </div>
+      <div class="chart-card tall">
+        <h3>Avaliação média por gênero</h3>
+        <div class="chart-sub">Gabrielle x Péricles, por gênero (apenas filmes avaliados)</div>
+        <canvas id="chartNotaGenero"></canvas>
+      </div>
+      <div class="chart-card tall">
+        <h3>Gabrielle x Péricles</h3>
+        <div class="chart-sub">Comparação das notas individuais, filme a filme</div>
+        <canvas id="chartDispersao"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILTROS -->
+  <section>
+    <div class="section-title">Filtros</div>
+    <div class="filters">
+      <div class="field">
+        <label for="fStatus">Status</label>
+        <select id="fStatus">
+          <option value="">Todos</option>
+          <option value="visto">Assistidos</option>
+          <option value="pendente">Pendentes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fGenero">Gênero</label>
+        <select id="fGenero"><option value="">Todos</option></select>
+      </div>
+      <div class="field">
+        <label for="fStreaming">Streaming</label>
+        <select id="fStreaming"><option value="">Todos</option></select>
+      </div>
+      <div class="field search">
+        <label for="fBusca">Buscar filme</label>
+        <input type="text" id="fBusca" placeholder="Digite o nome do filme...">
+      </div>
+      <button class="btn-clear" id="btnClear">Limpar filtros</button>
+    </div>
+  </section>
+
+  <!-- DESTAQUES -->
+  <section>
+    <div class="section-title">Destaques</div>
+    <div class="highlight-grid" id="highlightGrid">
+      <!-- preenchido via JS -->
+    </div>
+  </section>
+
+  <!-- TABELA -->
+  <section>
+    <div class="section-title">Lista de filmes</div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="movieTable">
+          <thead>
+            <tr>
+              <th data-key="filme">Filme<span class="arrow"></span></th>
+              <th data-key="visto">Status<span class="arrow"></span></th>
+              <th data-key="genero">Gênero<span class="arrow"></span></th>
+              <th data-key="streaming">Streaming<span class="arrow"></span></th>
+              <th data-key="notaG">Nota Gabrielle<span class="arrow"></span></th>
+              <th data-key="notaP">Nota Péricles<span class="arrow"></span></th>
+              <th data-key="media">Média<span class="arrow"></span></th>
+              <th data-key="dataOrd">Data<span class="arrow"></span></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="tableFooter"></div>
+    </div>
+  </section>
+
+  <footer class="app-footer">Feito com carinho para maratonas futuras 🍿</footer>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+// URL do CSV publicado do Google Sheets (Arquivo > Compartilhar > Publicar na web > CSV)
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7CWT6zt9MzuZ_mtNXBqrP_qUaO61Gsc8jQzCRCZcJHZmCJVDw9Fa8xSwszlxwlUn-A1qV_GtA1TdT/pub?gid=404169999&single=true&output=csv";
+
+/* ===================== PARSER DE CSV ===================== */
+// Parser simples que respeita aspas e vírgulas/quebras de linha dentro de campos
+function parseCSV(text){
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    const next = text[i+1];
+
+    if(inQuotes){
+      if(c === '"' && next === '"'){ field += '"'; i++; }
+      else if(c === '"'){ inQuotes = false; }
+      else { field += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\r'){ /* ignora */ }
+      else if(c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+      else { field += c; }
+    }
+  }
+  // última linha (caso não termine com \n)
+  if(field.length > 0 || row.length > 0){ row.push(field); rows.push(row); }
+
+  return rows.filter(r => r.some(c => c.trim() !== ''));
+}
+
+function parseBool(v){
+  if(v == null) return false;
+  const s = v.toString().trim().toUpperCase();
+  return s === 'TRUE' || s === 'VERDADEIRO' || s === 'SIM' || s === 'X' || s === '1';
+}
+
+function parseNota(v){
+  if(v == null) return null;
+  const s = v.toString().trim().replace(',', '.');
+  if(s === '') return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function csvRowsToMovies(rows){
+  if(rows.length === 0) return [];
+  const header = rows[0].map(h => h.trim());
+  const idx = {
+    filme: header.indexOf('Filme'),
+    visto: header.indexOf('Visto'),
+    vistoG: header.indexOf('Visto Antes G.'),
+    vistoP: header.indexOf('Visto Antes P.'),
+    data: header.indexOf('Data'),
+    streaming: header.indexOf('Streaming'),
+    notaG: header.indexOf('Nota Gabrielle'),
+    notaP: header.indexOf('Nota Pericles'),
+    genero: header.indexOf('Gênero')
+  };
+
+  const missing = Object.entries(idx).filter(([, v]) => v === -1).map(([k]) => k);
+  if(missing.length){
+    throw new Error('Colunas não encontradas na planilha: ' + missing.join(', '));
+  }
+
+  return rows.slice(1)
+    .filter(r => r[idx.filme] && r[idx.filme].trim() !== '')
+    .map(r => ({
+      filme: r[idx.filme].trim(),
+      visto: parseBool(r[idx.visto]),
+      vistoG: parseBool(r[idx.vistoG]),
+      vistoP: parseBool(r[idx.vistoP]),
+      data: (r[idx.data] || '').trim(),
+      streaming: (r[idx.streaming] || 'Não definido').trim() || 'Não definido',
+      notaG: parseNota(r[idx.notaG]),
+      notaP: parseNota(r[idx.notaP]),
+      genero: (r[idx.genero] || 'Não definido').trim() || 'Não definido'
+    }));
+}
+
+/* ===================== DADOS (fallback local, usado se a planilha falhar) ===================== */
+const FALLBACK_DATA = [{"filme": "A incrível história de Adaline", "visto": false, "vistoG": true, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Drama"}, {"filme": "A múmia", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Prime", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "A Vida de Chuck", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Prime", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "A Vida Secreta de Walter Mitty", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Disney", "notaG": null, "notaP": null, "genero": "Aventura"}, {"filme": "Bom Comportamento", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "After Sun", "visto": false, "vistoG": true, "vistoP": false, "data": "", "streaming": "Mubi", "notaG": null, "notaP": null, "genero": "Drama"}, {"filme": "Amelie", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Comédia"}, {"filme": "Anatomia de uma queda", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Prime", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Aquarius", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Benjamin Button", "visto": false, "vistoG": true, "vistoP": true, "data": "", "streaming": "Prime", "notaG": null, "notaP": null, "genero": "Drama"}, {"filme": "Cisne Negro", "visto": false, "vistoG": true, "vistoP": true, "data": "", "streaming": "Disney", "notaG": null, "notaP": null, "genero": "Suspense"}, {"filme": "Do que as mulheres gostam", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Drive", "visto": false, "vistoG": true, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Eu, Tonya", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Ex Machina", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Família de Aluguel", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Disney", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Fuga das Galinhas", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Globo Play", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Furiosa", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "HBO", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Guerreiras do K-Pop", "visto": false, "vistoG": true, "vistoP": false, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Homem com H", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Infiltrado na Klan", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Instinto Materno", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "King Richard", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "HBO", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Lalaland", "visto": false, "vistoG": true, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Meet the Parents", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Mickey 17", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "HBO", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Não é Mais um Besteirol Americano", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "O homem que copiava", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "O Segredo dos Seus Olhos", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Oppenheimer", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Orgulho e Preconceito", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Os Incríveis 2", "visto": false, "vistoG": true, "vistoP": true, "data": "", "streaming": "Disney", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Pitch Perfect", "visto": false, "vistoG": true, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Poderoso Chefão", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Rapunzel", "visto": false, "vistoG": true, "vistoP": false, "data": "", "streaming": "Disney", "notaG": null, "notaP": null, "genero": "Animação"}, {"filme": "Robôs", "visto": false, "vistoG": true, "vistoP": true, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Spirit o Corcel Indomável", "visto": false, "vistoG": true, "vistoP": true, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Animação"}, {"filme": "Superbad", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Comédia"}, {"filme": "The Hobbit 2", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Fantasia"}, {"filme": "The Hobbit 3", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": null, "notaP": null, "genero": "Fantasia"}, {"filme": "The Mastermind", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Mubi", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Train Dreams", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Drama"}, {"filme": "Uma Batalha Após a Outra", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "HBO", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Wall-E", "visto": false, "vistoG": true, "vistoP": true, "data": "", "streaming": "Disney", "notaG": null, "notaP": null, "genero": "Animação"}, {"filme": "Zodíaco", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "HBO", "notaG": null, "notaP": null, "genero": "Crime"}, {"filme": "The Purge", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "A casa monstro", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Tubarão", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Tróia", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Nosferatu", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Seven", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "HBO", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "21 Jump Street", "visto": false, "vistoG": false, "vistoP": true, "data": "", "streaming": "Netflix", "notaG": null, "notaP": null, "genero": "Comédia"}, {"filme": "Pulp Fiction", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Minha mãe é uma peça", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Endiabrado", "visto": false, "vistoG": false, "vistoP": false, "data": "", "streaming": "Não definido", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "O Som do Silêncio", "visto": true, "vistoG": false, "vistoP": true, "data": "23/08/2026", "streaming": "Prime", "notaG": 4.3, "notaP": 5.0, "genero": "Drama"}, {"filme": "Mad Max", "visto": true, "vistoG": false, "vistoP": true, "data": "16/08/2026", "streaming": "Prime", "notaG": null, "notaP": null, "genero": "Não definido"}, {"filme": "Não se Preocupe, Querida", "visto": true, "vistoG": true, "vistoP": false, "data": "01/08/2026", "streaming": "Netflix", "notaG": 4.2, "notaP": 4.3, "genero": "Suspense"}, {"filme": "Ainda Estou Aqui", "visto": true, "vistoG": false, "vistoP": false, "data": "14/11/2024", "streaming": "Cinema", "notaG": 4.8, "notaP": 4.5, "genero": "Drama"}, {"filme": "Anora", "visto": true, "vistoG": false, "vistoP": false, "data": "03/03/2025", "streaming": "Prime", "notaG": 2.0, "notaP": 2.2, "genero": "Comédia"}, {"filme": "Robô Selvagem", "visto": true, "vistoG": false, "vistoP": false, "data": "06/04/2025", "streaming": "Prime", "notaG": 4.7, "notaP": 4.8, "genero": "Animação"}, {"filme": "A real pain", "visto": true, "vistoG": false, "vistoP": false, "data": "11/04/2025", "streaming": "Disney", "notaG": 3.8, "notaP": 3.4, "genero": "Comédia"}, {"filme": "Amor a toda prova", "visto": true, "vistoG": true, "vistoP": true, "data": "13/04/2025", "streaming": "HBO", "notaG": 4.8, "notaP": 4.7, "genero": "Comédia"}, {"filme": "Mama Mia", "visto": true, "vistoG": true, "vistoP": false, "data": "18/04/2025", "streaming": "Prime", "notaG": 5.0, "notaP": 4.5, "genero": "Musical"}, {"filme": "O menino e a garça", "visto": true, "vistoG": false, "vistoP": false, "data": "18/04/2025", "streaming": "Netflix", "notaG": 3.0, "notaP": 3.2, "genero": "Animação"}, {"filme": "Juno", "visto": true, "vistoG": false, "vistoP": false, "data": "19/04/2025", "streaming": "Indisponível", "notaG": 4.8, "notaP": 4.4, "genero": "Comédia"}, {"filme": "Garfield 2", "visto": true, "vistoG": true, "vistoP": false, "data": "20/04/2025", "streaming": "Disney", "notaG": 3.3, "notaP": 3.4, "genero": "Comédia"}, {"filme": "Lord of the Rings 1", "visto": true, "vistoG": false, "vistoP": true, "data": "20/04/2025", "streaming": "HBO", "notaG": 3.7, "notaP": 4.5, "genero": "Fantasia"}, {"filme": "Pecadores", "visto": true, "vistoG": false, "vistoP": false, "data": "26/04/2025", "streaming": "Cinema", "notaG": 4.9, "notaP": 4.8, "genero": "Terror"}, {"filme": "Coraline", "visto": true, "vistoG": true, "vistoP": false, "data": "18/05/2025", "streaming": "Indisponível", "notaG": 4.7, "notaP": 4.5, "genero": "Animação"}, {"filme": "O conde de monte Cristo", "visto": true, "vistoG": false, "vistoP": true, "data": "22/05/2025", "streaming": "Indisponível", "notaG": 4.6, "notaP": 4.9, "genero": "Drama"}, {"filme": "Um dia", "visto": true, "vistoG": true, "vistoP": false, "data": "06/06/2025", "streaming": "HBO", "notaG": 4.5, "notaP": 4.3, "genero": "Romance"}, {"filme": "Hunger games 1", "visto": true, "vistoG": true, "vistoP": true, "data": "14/06/2025", "streaming": "Prime", "notaG": 3.9, "notaP": 4.1, "genero": "Fantasia"}, {"filme": "Hunger games 2", "visto": true, "vistoG": true, "vistoP": true, "data": "14/06/2025", "streaming": "Netflix", "notaG": 4.7, "notaP": 4.4, "genero": "Fantasia"}, {"filme": "Hunger games 3", "visto": true, "vistoG": true, "vistoP": true, "data": "22/06/2025", "streaming": "Prime", "notaG": 4.4, "notaP": 4.3, "genero": "Fantasia"}, {"filme": "Kung Fu Panda 1", "visto": true, "vistoG": true, "vistoP": true, "data": "26/06/2025", "streaming": "Prime", "notaG": 4.0, "notaP": 4.1, "genero": "Animação"}, {"filme": "Hunger games 4", "visto": true, "vistoG": true, "vistoP": true, "data": "06/07/2025", "streaming": "Prime", "notaG": 4.7, "notaP": 4.3, "genero": "Fantasia"}, {"filme": "Kung Fu Panda 2", "visto": true, "vistoG": true, "vistoP": true, "data": "06/07/2025", "streaming": "Prime", "notaG": 4.4, "notaP": 4.3, "genero": "Animação"}, {"filme": "Kung Fu Panda 3", "visto": true, "vistoG": false, "vistoP": true, "data": "11/07/2025", "streaming": "Prime", "notaG": 4.3, "notaP": 3.8, "genero": "Animação"}, {"filme": "Lord of the Rings 2", "visto": true, "vistoG": false, "vistoP": true, "data": "19/07/2025", "streaming": "HBO", "notaG": 4.4, "notaP": 4.6, "genero": "Fantasia"}, {"filme": "Lord of the Rings 3", "visto": true, "vistoG": false, "vistoP": true, "data": "27/07/2025", "streaming": "HBO", "notaG": 4.3, "notaP": 4.9, "genero": "Fantasia"}, {"filme": "Sim Senhor", "visto": true, "vistoG": true, "vistoP": true, "data": "27/07/2025", "streaming": "HBO", "notaG": 4.2, "notaP": 4.0, "genero": "Comédia"}, {"filme": "A Chegada", "visto": true, "vistoG": true, "vistoP": true, "data": "16/08/2025", "streaming": "HBO", "notaG": 4.3, "notaP": 4.5, "genero": "Drama"}, {"filme": "Bolt", "visto": true, "vistoG": true, "vistoP": false, "data": "30/08/2025", "streaming": "Disney", "notaG": 4.4, "notaP": 4.3, "genero": "Animação"}, {"filme": "A hora do mal", "visto": true, "vistoG": false, "vistoP": false, "data": "31/08/2025", "streaming": "Cinema", "notaG": 4.5, "notaP": 4.6, "genero": "Terror"}, {"filme": "Náufrago", "visto": true, "vistoG": false, "vistoP": true, "data": "07/09/2025", "streaming": "Netflix", "notaG": 4.5, "notaP": 4.7, "genero": "Drama"}, {"filme": "A origem dos guardiões", "visto": true, "vistoG": true, "vistoP": false, "data": "08/09/2025", "streaming": "Prime", "notaG": 4.2, "notaP": 4.0, "genero": "Animação"}, {"filme": "Incendies", "visto": true, "vistoG": false, "vistoP": false, "data": "14/09/2025", "streaming": "Indisponível", "notaG": 4.6, "notaP": 4.7, "genero": "Drama"}, {"filme": "Cruella", "visto": true, "vistoG": false, "vistoP": false, "data": "21/09/2025", "streaming": "Disney", "notaG": 4.3, "notaP": 4.3, "genero": "Aventura"}, {"filme": "A princesa e o sapo", "visto": true, "vistoG": true, "vistoP": false, "data": "28/09/2025", "streaming": "Disney", "notaG": 5.0, "notaP": 4.6, "genero": "Animação"}, {"filme": "The Batman", "visto": true, "vistoG": false, "vistoP": true, "data": "04/10/2025", "streaming": "HBO", "notaG": 3.6, "notaP": 3.7, "genero": "Ação"}, {"filme": "Os incríveis", "visto": true, "vistoG": true, "vistoP": true, "data": "19/10/2025", "streaming": "Disney", "notaG": 4.7, "notaP": 4.6, "genero": "Animação"}, {"filme": "Central do Brasil", "visto": true, "vistoG": false, "vistoP": false, "data": "24/10/2025", "streaming": "Netflix", "notaG": 4.8, "notaP": 4.8, "genero": "Drama"}, {"filme": "Os suspeitos", "visto": true, "vistoG": false, "vistoP": true, "data": "01/11/2025", "streaming": "Indisponível", "notaG": 3.8, "notaP": 4.6, "genero": "Suspense"}, {"filme": "Flow", "visto": true, "vistoG": false, "vistoP": false, "data": "02/11/2025", "streaming": "Indisponível", "notaG": 4.8, "notaP": 4.6, "genero": "Animação"}, {"filme": "Leo", "visto": true, "vistoG": true, "vistoP": false, "data": "09/11/2025", "streaming": "Netflix", "notaG": 4.6, "notaP": 4.6, "genero": "Animação"}, {"filme": "Frankenstein", "visto": true, "vistoG": false, "vistoP": false, "data": "06/12/2025", "streaming": "Netflix", "notaG": 4.7, "notaP": 4.4, "genero": "Fantasia"}, {"filme": "Os Roses: Ate Que a morte os separe", "visto": true, "vistoG": false, "vistoP": false, "data": "26/12/2025", "streaming": "Disney", "notaG": 4.2, "notaP": 4.3, "genero": "Comédia"}, {"filme": "Saltburn", "visto": true, "vistoG": true, "vistoP": false, "data": "18/01/2026", "streaming": "Prime", "notaG": 3.9, "notaP": 4.1, "genero": "Mistério"}, {"filme": "Alien", "visto": true, "vistoG": false, "vistoP": false, "data": "24/01/2026", "streaming": "Disney", "notaG": 3.5, "notaP": 4.2, "genero": "Terror"}, {"filme": "Eternity", "visto": true, "vistoG": false, "vistoP": false, "data": "20/02/2026", "streaming": "Apple TV", "notaG": 3.5, "notaP": 3.5, "genero": "Romance"}, {"filme": "The Hobbit 1", "visto": true, "vistoG": false, "vistoP": true, "data": "20/02/2026", "streaming": "Indisponível", "notaG": 3.9, "notaP": 3.7, "genero": "Aventura"}, {"filme": "A Última Música", "visto": true, "vistoG": false, "vistoP": false, "data": "22/02/2026", "streaming": "Disney", "notaG": 3.8, "notaP": 3.9, "genero": "Drama"}, {"filme": "District 9", "visto": true, "vistoG": false, "vistoP": true, "data": "22/02/2026", "streaming": "Prime", "notaG": 3.6, "notaP": 3.9, "genero": "Ficção Científica"}, {"filme": "Agente Secreto", "visto": true, "vistoG": false, "vistoP": false, "data": "14/03/2026", "streaming": "Netflix", "notaG": 4.8, "notaP": 4.8, "genero": "Drama"}, {"filme": "Bugonia", "visto": true, "vistoG": false, "vistoP": false, "data": "15/03/2026", "streaming": "Indisponível", "notaG": 2.8, "notaP": 3.6, "genero": "Não definido"}, {"filme": "Zootopia 2", "visto": true, "vistoG": false, "vistoP": false, "data": "15/03/2026", "streaming": "Disney", "notaG": 4.5, "notaP": 4.5, "genero": "Animação"}, {"filme": "Onde os fracos não tem vez", "visto": true, "vistoG": false, "vistoP": true, "data": "17/03/2026", "streaming": "Indisponível", "notaG": 3.2, "notaP": 4.6, "genero": "Suspense"}, {"filme": "Devorador de Estrelas", "visto": true, "vistoG": false, "vistoP": false, "data": "21/03/2026", "streaming": "Cinema", "notaG": 4.3, "notaP": 4.6, "genero": "Ficção Científica"}, {"filme": "Bacurau", "visto": true, "vistoG": false, "vistoP": false, "data": "03/04/2026", "streaming": "Globo Play", "notaG": 4.4, "notaP": 3.7, "genero": "Ação"}, {"filme": "Legalmente Loira", "visto": true, "vistoG": true, "vistoP": false, "data": "11/04/2026", "streaming": "Indisponível", "notaG": 4.5, "notaP": 4.6, "genero": "Comédia"}, {"filme": "Corcunda de Notre Dame", "visto": true, "vistoG": true, "vistoP": false, "data": "12/04/2026", "streaming": "Disney", "notaG": 4.5, "notaP": 4.0, "genero": "Animação"}, {"filme": "Harry & Sally", "visto": true, "vistoG": false, "vistoP": true, "data": "12/04/2026", "streaming": "Prime", "notaG": 4.6, "notaP": 4.2, "genero": "Romance"}, {"filme": "Jurassic Park", "visto": true, "vistoG": false, "vistoP": true, "data": "19/04/2026", "streaming": "HBO", "notaG": 4.2, "notaP": 4.2, "genero": "Ficção Científica"}, {"filme": "The Summit of the Gods", "visto": true, "vistoG": false, "vistoP": true, "data": "20/04/2026", "streaming": "Netflix", "notaG": 4.4, "notaP": 4.2, "genero": "Animação"}, {"filme": "Coração de Tinta", "visto": true, "vistoG": true, "vistoP": false, "data": "26/04/2026", "streaming": "HBO", "notaG": 4.0, "notaP": 3.9, "genero": "Fantasia"}, {"filme": "Mensagem para você", "visto": true, "vistoG": false, "vistoP": false, "data": "27/04/2026", "streaming": "HBO", "notaG": 3.7, "notaP": 3.6, "genero": "Romance"}, {"filme": "Sorte no Amor", "visto": true, "vistoG": true, "vistoP": false, "data": "17/05/2026", "streaming": "Disney", "notaG": 4.1, "notaP": 3.9, "genero": "Romance"}, {"filme": "Prenda-me se for Capaz", "visto": true, "vistoG": false, "vistoP": true, "data": "24/05/2026", "streaming": "Netflix", "notaG": 3.6, "notaP": 3.8, "genero": "Ação"}, {"filme": "Se fosse verdade", "visto": true, "vistoG": true, "vistoP": false, "data": "31/05/2026", "streaming": "Netflix", "notaG": 4.7, "notaP": 3.8, "genero": "Romance"}, {"filme": "Vidas Passadas", "visto": true, "vistoG": false, "vistoP": false, "data": "12/06/2026", "streaming": "Netflix", "notaG": 4.7, "notaP": 4.4, "genero": "Drama"}, {"filme": "The Martian", "visto": true, "vistoG": false, "vistoP": true, "data": "14/06/2026", "streaming": "Disney", "notaG": 4.1, "notaP": 4.2, "genero": "Ficção Científica"}, {"filme": "Toy Story 4", "visto": true, "vistoG": true, "vistoP": true, "data": "21/06/2026", "streaming": "Disney", "notaG": 3.8, "notaP": 3.9, "genero": "Animação"}, {"filme": "Toy Story 5", "visto": true, "vistoG": false, "vistoP": false, "data": "27/06/2026", "streaming": "Cinema", "notaG": 4.7, "notaP": 4.7, "genero": "Animação"}, {"filme": "Um sonho de liberdade", "visto": true, "vistoG": false, "vistoP": true, "data": "28/06/2026", "streaming": "HBO", "notaG": 4.5, "notaP": 4.7, "genero": "Drama"}, {"filme": "Vida de Inseto", "visto": true, "vistoG": true, "vistoP": true, "data": "11/07/2026", "streaming": "Disney", "notaG": 4.6, "notaP": 5.0, "genero": "Animação"}, {"filme": "Odisséia", "visto": true, "vistoG": false, "vistoP": false, "data": "18/07/2026", "streaming": "Cinema", "notaG": 4.7, "notaP": 4.6, "genero": "Aventura"}, {"filme": "Quem quer ser um milionário", "visto": true, "vistoG": true, "vistoP": true, "data": "25/07/2026", "streaming": "Prime", "notaG": 4.3, "notaP": 4.6, "genero": "Não definido"}, {"filme": "The Invite", "visto": true, "vistoG": false, "vistoP": false, "data": "26/07/2026", "streaming": "Cinema", "notaG": 4.7, "notaP": 4.6, "genero": "Comédia"}, {"filme": "Amores Materialistas", "visto": true, "vistoG": false, "vistoP": false, "data": "", "streaming": "Cinema", "notaG": 2.7, "notaP": 2.5, "genero": "Romance"}, {"filme": "Atividade Paranormal", "visto": true, "vistoG": true, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": 3.8, "notaP": 3.2, "genero": "Terror"}, {"filme": "Avatar 2", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Disney", "notaG": 3.7, "notaP": 3.8, "genero": "Aventura"}, {"filme": "Bob Esponja", "visto": true, "vistoG": true, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": 4.5, "notaP": 3.9, "genero": "Animação"}, {"filme": "Capitão Fantástico", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": 3.7, "notaP": 4.2, "genero": "Comédia"}, {"filme": "Casamento Sangrento", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Disney", "notaG": 4.0, "notaP": 4.3, "genero": "Terror"}, {"filme": "Conclave", "visto": true, "vistoG": false, "vistoP": false, "data": "", "streaming": "Cinema", "notaG": 5.0, "notaP": 4.9, "genero": "Drama"}, {"filme": "Deu a Louca na Chapeuzinho", "visto": true, "vistoG": true, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": 4.4, "notaP": 4.6, "genero": "Animação"}, {"filme": "Django Livre", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": 4.6, "notaP": 4.5, "genero": "Ação"}, {"filme": "É assim que acaba", "visto": true, "vistoG": false, "vistoP": false, "data": "", "streaming": "Cinema", "notaG": 4.4, "notaP": 4.1, "genero": "Drama"}, {"filme": "Entrevista com o Vampiro", "visto": true, "vistoG": false, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": 4.3, "notaP": 3.9, "genero": "Terror"}, {"filme": "Eurotrip", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": 2.9, "notaP": 3.9, "genero": "Comédia"}, {"filme": "Gato de Botas 2", "visto": true, "vistoG": false, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": 4.4, "notaP": 4.4, "genero": "Animação"}, {"filme": "Guerra mundial Z", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": 3.8, "notaP": 4.0, "genero": "Terror"}, {"filme": "Hannah Montana o filme", "visto": true, "vistoG": true, "vistoP": false, "data": "", "streaming": "Disney", "notaG": 4.7, "notaP": 4.0, "genero": "Comédia"}, {"filme": "Harry Porter e o Enigma do Príncipe", "visto": true, "vistoG": true, "vistoP": true, "data": "", "streaming": "HBO", "notaG": 4.4, "notaP": 4.4, "genero": "Fantasia"}, {"filme": "Homem-Aranha: Através do Aranhaverso", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Prime", "notaG": 4.7, "notaP": 4.7, "genero": "Animação"}, {"filme": "Intocáveis", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Indisponível", "notaG": 4.6, "notaP": 4.7, "genero": "Drama"}, {"filme": "Little Miss Sunshine", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Disney", "notaG": 4.8, "notaP": 4.7, "genero": "Comédia"}, {"filme": "Shrek Para Sempre", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "Prime", "notaG": 4.8, "notaP": 4.3, "genero": "Animação"}, {"filme": "Substância", "visto": true, "vistoG": false, "vistoP": false, "data": "", "streaming": "Indisponível", "notaG": 4.5, "notaP": 4.5, "genero": "Terror"}, {"filme": "Whiplash", "visto": true, "vistoG": false, "vistoP": true, "data": "", "streaming": "HBO", "notaG": 4.3, "notaP": 4.6, "genero": "Drama"}, {"filme": "Obsessão", "visto": true, "vistoG": false, "vistoP": false, "data": "09/08/2026", "streaming": "Indisponível", "notaG": 4.5, "notaP": 4.8, "genero": "Terror"}]
+;
+
+const COLOR_G = getComputedStyle(document.documentElement).getPropertyValue('--gabrielle').trim() || '#e0568c';
+const COLOR_P = getComputedStyle(document.documentElement).getPropertyValue('--pericles').trim() || '#4aa8e6';
+const COLOR_ACCENT = '#e6b04a';
+
+/* ===================== HELPERS ===================== */
+function parseDateBR(str){
+  if(!str) return null;
+  const parts = str.split('/');
+  if(parts.length !== 3) return null;
+  const [d,m,y] = parts.map(Number);
+  if(!d || !m || !y) return null;
+  return new Date(y, m-1, d);
+}
+
+function coupleAvg(ng, np){
+  if(ng == null && np == null) return null;
+  if(ng == null) return np;
+  if(np == null) return ng;
+  return (ng + np) / 2;
+}
+
+function diffNotes(ng, np){
+  if(ng == null || np == null) return null;
+  return Math.abs(ng - np);
+}
+
+function fmt1(n){
+  return (Math.round(n * 10) / 10).toFixed(1).replace('.', ',');
+}
+
+// pre-process
+function preprocess(rawData){
+  return rawData.map(m => ({
+    ...m,
+    dataObj: parseDateBR(m.data),
+    dataOrd: parseDateBR(m.data) ? parseDateBR(m.data).getTime() : -1,
+    media: coupleAvg(m.notaG, m.notaP),
+    diff: diffNotes(m.notaG, m.notaP),
+    novoParaOsDois: (m.vistoG === false && m.vistoP === false)
+  }));
+}
+
+let DATA = [];
+
+/* ===================== FILTER STATE ===================== */
+let sortState = { key: 'filme', dir: 'asc' };
+
+function populateSelect(id, values){
+  const sel = document.getElementById(id);
+  sel.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
+  const opts = [...new Set(values)].filter(v => v && v.trim()).sort((a,b)=>a.localeCompare(b, 'pt-BR'));
+  opts.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+function getFilteredData(){
+  const status = document.getElementById('fStatus').value;
+  const genero = document.getElementById('fGenero').value;
+  const streaming = document.getElementById('fStreaming').value;
+  const busca = document.getElementById('fBusca').value.trim().toLowerCase();
+
+  return DATA.filter(m => {
+    if(status === 'visto' && !m.visto) return false;
+    if(status === 'pendente' && m.visto) return false;
+    if(genero && m.genero !== genero) return false;
+    if(streaming && m.streaming !== streaming) return false;
+    if(busca && !m.filme.toLowerCase().includes(busca)) return false;
+    return true;
+  });
+}
+
+/* ===================== CHARTS ===================== */
+let charts = {};
+
+function destroyChart(key){
+  if(charts[key]){ charts[key].destroy(); charts[key] = null; }
+}
+
+function renderStatusChart(data){
+  const ctx = document.getElementById('chartStatus').getContext('2d');
+  const assistidos = data.filter(d => d.visto).length;
+  const pendentes = data.length - assistidos;
+  destroyChart('status');
+  charts.status = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Assistidos', 'Pendentes'],
+      datasets: [{
+        data: [assistidos, pendentes],
+        backgroundColor: ['#4ac98a', '#3a4050'],
+        borderColor: '#12151c',
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#9aa1b2', font: { size: 12 }, padding: 16 } }
+      }
+    }
+  });
+}
+
+function renderGeneroChart(data){
+  const ctx = document.getElementById('chartGenero').getContext('2d');
+  const counts = {};
+  data.forEach(m => { counts[m.genero] = (counts[m.genero] || 0) + 1; });
+  const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  destroyChart('genero');
+  if(entries.length === 0){
+    charts.genero = null;
+    return;
+  }
+  charts.genero = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: entries.map(e => e[0]),
+      datasets: [{
+        label: 'Filmes',
+        data: entries.map(e => e[1]),
+        backgroundColor: '#e6b04a',
+        borderRadius: 6,
+        maxBarThickness: 28
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#9aa1b2', precision:0 }, grid: { color: '#1c202a' } },
+        y: { ticks: { color: '#9aa1b2', font: {size: 11} }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderNotaGeneroChart(data){
+  const ctx = document.getElementById('chartNotaGenero').getContext('2d');
+  const byGenre = {};
+  data.forEach(m => {
+    if(m.notaG == null && m.notaP == null) return;
+    if(!byGenre[m.genero]) byGenre[m.genero] = { g: [], p: [] };
+    if(m.notaG != null) byGenre[m.genero].g.push(m.notaG);
+    if(m.notaP != null) byGenre[m.genero].p.push(m.notaP);
+  });
+  const genres = Object.keys(byGenre).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  destroyChart('notaGenero');
+  if(genres.length === 0){
+    charts.notaGenero = null;
+    return;
+  }
+  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+  charts.notaGenero = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: genres,
+      datasets: [
+        {
+          label: 'Gabrielle',
+          data: genres.map(g => { const v = avg(byGenre[g].g); return v == null ? null : Math.round(v*100)/100; }),
+          backgroundColor: COLOR_G,
+          borderRadius: 5,
+          maxBarThickness: 18
+        },
+        {
+          label: 'Péricles',
+          data: genres.map(g => { const v = avg(byGenre[g].p); return v == null ? null : Math.round(v*100)/100; }),
+          backgroundColor: COLOR_P,
+          borderRadius: 5,
+          maxBarThickness: 18
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#9aa1b2', font: {size: 12}, padding: 14 } }
+      },
+      scales: {
+        x: { ticks: { color: '#9aa1b2', font: {size: 11}, maxRotation: 40, minRotation: 0 }, grid: { display: false } },
+        y: { min: 0, max: 5, ticks: { color: '#9aa1b2' }, grid: { color: '#1c202a' } }
+      }
+    }
+  });
+}
+
+function renderDispersaoChart(data){
+  const ctx = document.getElementById('chartDispersao').getContext('2d');
+  const pontos = data.filter(m => m.notaG != null && m.notaP != null);
+  destroyChart('dispersao');
+  if(pontos.length === 0){
+    charts.dispersao = null;
+    return;
+  }
+  charts.dispersao = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Filmes avaliados por ambos',
+        data: pontos.map(m => ({ x: m.notaG, y: m.notaP, filme: m.filme })),
+        backgroundColor: 'rgba(230,176,74,0.75)',
+        borderColor: COLOR_ACCENT,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const p = ctx.raw;
+              return `${p.filme}: Gabrielle ${fmt1(p.x)} · Péricles ${fmt1(p.y)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { min: 0, max: 5, title: { display: true, text: 'Nota Gabrielle', color: COLOR_G }, ticks: { color: '#9aa1b2' }, grid: { color: '#1c202a' } },
+        y: { min: 0, max: 5, title: { display: true, text: 'Nota Péricles', color: COLOR_P }, ticks: { color: '#9aa1b2' }, grid: { color: '#1c202a' } }
+      }
+    }
+  });
+}
+
+/* ===================== KPIs ===================== */
+function renderKPIs(data){
+  const total = data.length;
+  const assistidos = data.filter(d => d.visto).length;
+  const pendentes = total - assistidos;
+
+  const notasG = data.map(d => d.notaG).filter(v => v != null);
+  const notasP = data.map(d => d.notaP).filter(v => v != null);
+  const medias = data.map(d => d.media).filter(v => v != null);
+
+  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+
+  document.getElementById('kpiTotal').textContent = total;
+  document.getElementById('kpiAssistidos').textContent = assistidos;
+  document.getElementById('kpiPendentes').textContent = pendentes;
+
+  const mg = avg(notasG), mp = avg(notasP), mc = avg(medias);
+  document.getElementById('kpiMediaG').textContent = mg != null ? fmt1(mg) : '—';
+  document.getElementById('kpiMediaP').textContent = mp != null ? fmt1(mp) : '—';
+  document.getElementById('kpiMediaCasal').textContent = mc != null ? fmt1(mc) : '—';
+}
+
+/* ===================== HIGHLIGHTS ===================== */
+function renderHighlights(data){
+  const grid = document.getElementById('highlightGrid');
+  grid.innerHTML = '';
+
+  const comMedia = data.filter(d => d.media != null);
+  const comDiff = data.filter(d => d.diff != null);
+
+  let topMedia = null;
+  if(comMedia.length){
+    topMedia = comMedia.reduce((best, cur) => cur.media > best.media ? cur : best);
+  }
+
+  let topDiff = null;
+  if(comDiff.length){
+    topDiff = comDiff.reduce((best, cur) => cur.diff > best.diff ? cur : best);
+  }
+
+  const generoCounts = {};
+  data.forEach(m => { generoCounts[m.genero] = (generoCounts[m.genero] || 0) + 1; });
+  const generoEntries = Object.entries(generoCounts).filter(([g]) => g !== 'Não definido').sort((a,b)=>b[1]-a[1]);
+  const topGenero = generoEntries.length ? generoEntries[0] : null;
+
+  const novosParaOsDois = data.filter(d => d.novoParaOsDois).length;
+
+  const cards = [
+    {
+      icon: '⭐',
+      label: 'Maior média',
+      value: topMedia ? topMedia.filme : 'Sem dados suficientes',
+      detail: topMedia ? `Média ${fmt1(topMedia.media)}` : ''
+    },
+    {
+      icon: '⚡',
+      label: 'Maior divergência de notas',
+      value: topDiff ? topDiff.filme : 'Sem dados suficientes',
+      detail: topDiff ? `Diferença de ${fmt1(topDiff.diff)} pontos` : ''
+    },
+    {
+      icon: '🎭',
+      label: 'Gênero mais frequente',
+      value: topGenero ? topGenero[0] : 'Sem dados suficientes',
+      detail: topGenero ? `${topGenero[1]} filme${topGenero[1] > 1 ? 's' : ''}` : ''
+    },
+    {
+      icon: '🆕',
+      label: 'Novos para os dois',
+      value: `${novosParaOsDois} filme${novosParaOsDois !== 1 ? 's' : ''}`,
+      detail: 'Nenhum dos dois tinha visto antes'
+    }
+  ];
+
+  cards.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'hl-card';
+    div.innerHTML = `
+      <div class="hl-icon">${c.icon}</div>
+      <div class="hl-label">${c.label}</div>
+      <div class="hl-value">${c.value}</div>
+      <div class="hl-detail">${c.detail}</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+/* ===================== TABLE ===================== */
+function renderTable(data){
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  const sorted = [...data].sort((a,b) => {
+    let va = a[sortState.key];
+    let vb = b[sortState.key];
+
+    // nulls sempre por último, independente da direção
+    const aNull = (va == null || va === '');
+    const bNull = (vb == null || vb === '');
+    if(aNull && bNull) return 0;
+    if(aNull) return 1;
+    if(bNull) return -1;
+
+    if(typeof va === 'string'){
+      va = va.toLowerCase(); vb = vb.toLowerCase();
+      const cmp = va.localeCompare(vb, 'pt-BR');
+      return sortState.dir === 'asc' ? cmp : -cmp;
+    }
+    if(typeof va === 'boolean'){
+      va = va ? 1 : 0; vb = vb ? 1 : 0;
+    }
+    const cmp = va - vb;
+    return sortState.dir === 'asc' ? cmp : -cmp;
+  });
+
+  sorted.forEach(m => {
+    const tr = document.createElement('tr');
+    const statusBadge = m.visto
+      ? '<span class="badge visto">Assistido</span>'
+      : '<span class="badge pendente">Pendente</span>';
+    const notaG = m.notaG != null ? `<span class="note-g">${fmt1(m.notaG)}</span>` : '<span class="muted">—</span>';
+    const notaP = m.notaP != null ? `<span class="note-p">${fmt1(m.notaP)}</span>` : '<span class="muted">—</span>';
+    const media = m.media != null ? `<span class="note-avg">${fmt1(m.media)}</span>` : '<span class="muted">—</span>';
+    const data = m.data ? m.data : '<span class="muted">—</span>';
+
+    tr.innerHTML = `
+      <td>${m.filme}</td>
+      <td>${statusBadge}</td>
+      <td>${m.genero}</td>
+      <td>${m.streaming}</td>
+      <td>${notaG}</td>
+      <td>${notaP}</td>
+      <td>${media}</td>
+      <td>${data}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('tableFooter').textContent =
+    `Exibindo ${sorted.length} de ${DATA.length} filme${DATA.length !== 1 ? 's' : ''}`;
+
+  // update sort arrows
+  document.querySelectorAll('#movieTable thead th').forEach(th => {
+    const arrow = th.querySelector('.arrow');
+    if(th.dataset.key === sortState.key){
+      arrow.textContent = sortState.dir === 'asc' ? '▲' : '▼';
+    } else {
+      arrow.textContent = '';
+    }
+  });
+}
+
+/* ===================== MASTER RENDER ===================== */
+function safeRun(label, fn){
+  try {
+    fn();
+  } catch(e){
+    console.error('Erro ao renderizar "' + label + '":', e);
+  }
+}
+
+function renderAll(){
+  const filtered = getFilteredData();
+  safeRun('KPIs', () => renderKPIs(filtered));
+  safeRun('gráfico de status', () => renderStatusChart(filtered));
+  safeRun('gráfico de gênero', () => renderGeneroChart(filtered));
+  safeRun('gráfico de nota por gênero', () => renderNotaGeneroChart(filtered));
+  safeRun('gráfico de dispersão', () => renderDispersaoChart(filtered));
+  safeRun('destaques', () => renderHighlights(filtered));
+  safeRun('tabela', () => renderTable(filtered));
+}
+
+/* ===================== EVENTS ===================== */
+document.getElementById('fStatus').addEventListener('change', renderAll);
+document.getElementById('fGenero').addEventListener('change', renderAll);
+document.getElementById('fStreaming').addEventListener('change', renderAll);
+document.getElementById('fBusca').addEventListener('input', renderAll);
+
+document.getElementById('btnClear').addEventListener('click', () => {
+  document.getElementById('fStatus').value = '';
+  document.getElementById('fGenero').value = '';
+  document.getElementById('fStreaming').value = '';
+  document.getElementById('fBusca').value = '';
+  renderAll();
+});
+
+document.querySelectorAll('#movieTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if(sortState.key === key){
+      sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortState.key = key;
+      sortState.dir = 'asc';
+    }
+    renderTable(getFilteredData());
+  });
+});
+
+/* ===================== INIT ===================== */
+function showBanner(msg, isError){
+  const banner = document.createElement('div');
+  const bg = isError ? '#3a2412' : '#1e3a2b';
+  const border = isError ? '#6b4a1e' : '#2e6b4a';
+  const color = isError ? '#f0c98a' : '#8af0c9';
+  banner.style.cssText = `background:${bg};border:1px solid ${border};color:${color};padding:12px 16px;border-radius:10px;margin-bottom:20px;font-size:13px;`;
+  banner.textContent = msg;
+  document.querySelector('.wrap').insertBefore(banner, document.querySelector('.wrap').children[1]);
+}
+
+function showChartWarning(){
+  showBanner('Não foi possível carregar a biblioteca de gráficos (Chart.js) — verifique sua conexão com a internet. KPIs, filtros, destaques e tabela funcionam normalmente.', true);
+}
+
+async function loadData(){
+  try{
+    const resp = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    const rows = parseCSV(text);
+    const movies = csvRowsToMovies(rows);
+    if(movies.length === 0) throw new Error('Planilha retornou 0 filmes');
+    return movies;
+  } catch(e){
+    console.error('Falha ao carregar planilha, usando dados locais de fallback:', e);
+    showBanner('Não foi possível atualizar com a planilha mais recente — exibindo a última versão salva no site.', true);
+    return FALLBACK_DATA;
+  }
+}
+
+function startCharts(){
+  if(typeof Chart === 'undefined'){
+    const fallback = document.createElement('script');
+    fallback.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
+    fallback.onload = renderAll;
+    fallback.onerror = function(){
+      showChartWarning();
+      renderAll();
+    };
+    document.head.appendChild(fallback);
+  } else {
+    renderAll();
+  }
+}
+
+async function init(){
+  const rawData = await loadData();
+  DATA = preprocess(rawData);
+  populateSelect('fGenero', DATA.map(d => d.genero));
+  populateSelect('fStreaming', DATA.map(d => d.streaming));
+  startCharts();
+}
+
+init();
+</script>
+</body>
+</html>
