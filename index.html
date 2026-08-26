@@ -594,36 +594,8 @@
     </div>
   </section>
 
-  <!-- GRAFICOS -->
-  <section>
-    <div class="section-title">Análises</div>
-    <div class="chart-grid">
-      <div class="chart-card clickable">
-        <h3>Filmes por gênero <span id="generoFilterTag"></span></h3>
-        <div class="chart-sub">Clique em uma barra para filtrar por gênero</div>
-        <canvas id="chartGenero"></canvas>
-      </div>
-      <div class="chart-card tall">
-        <h3>Avaliação média por gênero</h3>
-        <div class="chart-sub">Gabrielle x Péricles, por gênero (apenas filmes avaliados)</div>
-        <canvas id="chartNotaGenero"></canvas>
-      </div>
-      <div class="chart-card tall">
-        <h3>Gabrielle x Péricles</h3>
-        <div class="chart-sub">Comparação das notas individuais, filme a filme</div>
-        <canvas id="chartDispersao"></canvas>
-      </div>
-      <div class="chart-card tall">
-        <h3>Evolução das notas</h3>
-        <div class="chart-sub">Média móvel das avaliações do casal ao longo do tempo</div>
-        <canvas id="chartEvolucao"></canvas>
-      </div>
-    </div>
-  </section>
-
   <!-- SORTEADOR -->
   <section>
-    <div class="section-title">Sorteador de filme pendente</div>
     <div class="draw-card">
       <div class="draw-info">
         <div class="draw-count" id="drawCount">-</div>
@@ -638,7 +610,6 @@
 
   <!-- FILTROS -->
   <section>
-    <div class="section-title">Filtros</div>
     <div class="filters">
       <div class="field">
         <label for="fStatus">Status</label>
@@ -666,7 +637,6 @@
 
   <!-- TABELA -->
   <section>
-    <div class="section-title">Lista de filmes</div>
     <div class="table-wrap">
       <div class="table-scroll">
         <table id="movieTable">
@@ -687,6 +657,33 @@
         </table>
       </div>
       <div class="table-footer" id="tableFooter"></div>
+    </div>
+  </section>
+
+  <!-- GRAFICOS -->
+  <section>
+    <div class="section-title">Análises</div>
+    <div class="chart-grid">
+      <div class="chart-card clickable">
+        <h3>Filmes por gênero <span id="generoFilterTag"></span></h3>
+        <div class="chart-sub">Clique em uma barra para filtrar por gênero</div>
+        <canvas id="chartGenero"></canvas>
+      </div>
+      <div class="chart-card tall">
+        <h3>Avaliação média por gênero</h3>
+        <div class="chart-sub">Gabrielle x Péricles, por gênero (apenas filmes avaliados)</div>
+        <canvas id="chartNotaGenero"></canvas>
+      </div>
+      <div class="chart-card tall">
+        <h3>Gabrielle x Péricles</h3>
+        <div class="chart-sub">Comparação das notas individuais, filme a filme</div>
+        <canvas id="chartDispersao"></canvas>
+      </div>
+      <div class="chart-card tall">
+        <h3>Evolução das notas</h3>
+        <div class="chart-sub">Média móvel das avaliações do casal ao longo do tempo</div>
+        <canvas id="chartEvolucao"></canvas>
+      </div>
     </div>
   </section>
 
