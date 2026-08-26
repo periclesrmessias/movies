@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎬 Nosso Cinema</title>
-<link rel="icon" type="image/jpeg" href="favicon.jpg">
-<link rel="shortcut icon" type="image/jpeg" href="favicon.jpg">
+<title>Filmes</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" onerror="window.__chartLoadFailed = true;"></script>
 <style>
   :root{
@@ -85,20 +83,23 @@
   /* KPI GRID */
   .kpi-grid{
     display:grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 14px;
-    margin-bottom: 28px;
+    margin-bottom: 14px;
+    align-items: stretch;
   }
-  @media (max-width: 980px){ .kpi-grid{ grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 600px){ .kpi-grid{ grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 900px){ .kpi-grid{ grid-template-columns: 1fr; } }
 
   .kpi-card{
     background: linear-gradient(180deg, var(--bg-elev), var(--bg-elev-2));
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 18px 16px;
+    padding: 18px 20px;
     box-shadow: var(--shadow);
     transition: transform .18s ease, border-color .18s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .kpi-card:hover{ transform: translateY(-2px); border-color:#333a49; }
 
@@ -107,7 +108,7 @@
     text-transform: uppercase;
     letter-spacing: .06em;
     color: var(--text-faint);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-weight: 600;
   }
   .kpi-card .value{
@@ -116,9 +117,103 @@
     letter-spacing: -0.02em;
   }
   .kpi-card .value.small{ font-size: 24px; }
-  .kpi-card.gabrielle .value{ color: var(--gabrielle); }
-  .kpi-card.pericles .value{ color: var(--pericles); }
-  .kpi-card.casal .value{ color: var(--accent); }
+
+  /* Card Total (com botões Assistidos/Pendentes) */
+  .kpi-total-row{
+    display:flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .kpi-status-buttons{
+    display:flex;
+    gap: 10px;
+  }
+  .status-btn{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap: 3px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+    font-family: inherit;
+  }
+  .status-btn:hover{ border-color: #3a4050; transform: translateY(-1px); }
+  .status-btn .status-btn-value{
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .status-btn .status-btn-label{
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 600;
+  }
+  .status-btn.assistidos .status-btn-value{ color: var(--ok); }
+  .status-btn.pendentes .status-btn-value{ color: var(--text-dim); }
+  .status-btn.active{ background: rgba(255,255,255,0.03); }
+  .status-btn.assistidos.active{ border-color: var(--ok); }
+  .status-btn.pendentes.active{ border-color: var(--accent); }
+
+  /* Card Médias (Gabrielle + Péricles + casal) */
+  .kpi-medias-row{
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .media-item{
+    display:flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .media-item .media-value{ font-size: 24px; font-weight: 700; }
+  .media-item .media-name{
+    font-size: 11px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 600;
+  }
+  .media-item.gabrielle .media-value{ color: var(--gabrielle); }
+  .media-item.pericles .media-value{ color: var(--pericles); }
+  .media-item.casal{
+    padding-left: 16px;
+    border-left: 1px solid var(--border);
+  }
+  .media-item.casal .media-value{ color: var(--accent); font-size: 26px; }
+
+  /* Card Último filme assistido */
+  .kpi-last-card{
+    display:flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .kpi-last-card .last-icon{ font-size: 26px; line-height: 1; }
+  .kpi-last-card .last-body{ flex:1; min-width: 0; }
+  .kpi-last-card .last-name{
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .kpi-last-card .last-meta{
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    display:flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .kpi-last-card .last-meta span{ display:flex; align-items:center; gap:5px; }
+  .kpi-last-card .last-note{ color: var(--accent); font-weight: 700; }
 
   section{ margin-bottom: 28px; }
 
@@ -158,6 +253,29 @@
   }
   .chart-card canvas{ max-height: 280px; }
   .chart-card.tall canvas{ max-height: 340px; }
+  .chart-card.clickable canvas{ cursor: pointer; }
+  .chart-filter-tag{
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    background: rgba(230,176,74,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(230,176,74,0.3);
+    border-radius: 20px;
+    padding: 3px 10px 3px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .chart-filter-tag button{
+    background:none;
+    border:none;
+    color: var(--accent);
+    cursor:pointer;
+    font-size: 13px;
+    line-height:1;
+    padding:0;
+  }
 
   .empty-note{
     color: var(--text-faint);
@@ -273,6 +391,11 @@
   .badge.visto{ background: rgba(74,201,138,0.15); color: var(--ok); }
   .badge.pendente{ background: rgba(255,255,255,0.06); color: var(--text-dim); }
 
+  .filme-nome[title]{
+    cursor: help;
+    border-bottom: 1px dotted var(--text-faint);
+  }
+
   .note-g{ color: var(--gabrielle); font-weight: 600; }
   .note-p{ color: var(--pericles); font-weight: 600; }
   .note-avg{ color: var(--accent); font-weight: 700; }
@@ -285,41 +408,98 @@
     border-top: 1px solid var(--border);
   }
 
-  /* HIGHLIGHTS */
-  .highlight-grid{
-    display:grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-  }
-  @media (max-width: 900px){ .highlight-grid{ grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 560px){ .highlight-grid{ grid-template-columns: 1fr; } }
-
-  .hl-card{
+  /* SORTEADOR */
+  .draw-card{
     background: linear-gradient(160deg, var(--bg-elev), var(--bg-elev-2));
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 18px;
+    padding: 24px;
     box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
   }
-  .hl-card .hl-icon{ font-size: 20px; margin-bottom: 8px; }
-  .hl-card .hl-label{
-    font-size: 11.5px;
+  .draw-info{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 90px;
+  }
+  .draw-count{
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--pericles);
+    letter-spacing: -0.02em;
+  }
+  .draw-count-label{
+    font-size: 11px;
+    color: var(--text-faint);
     text-transform: uppercase;
     letter-spacing: .05em;
+    text-align: center;
+    margin-top: 2px;
+  }
+  .draw-result{
+    flex: 1 1 260px;
+    min-width: 220px;
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .draw-result.hit{
+    border-style: solid;
+    border-color: var(--pericles);
+    background: rgba(74,168,230,0.08);
+  }
+  .draw-placeholder{
     color: var(--text-faint);
-    font-weight: 600;
-    margin-bottom: 6px;
+    font-size: 14px;
   }
-  .hl-card .hl-value{
-    font-size: 17px;
+  .draw-movie-name{
+    font-size: 20px;
     font-weight: 700;
-    line-height: 1.3;
+    letter-spacing: -0.01em;
   }
-  .hl-card .hl-detail{
+  .draw-movie-meta{
     font-size: 12.5px;
     color: var(--text-dim);
     margin-top: 4px;
   }
+  .draw-empty{
+    color: var(--text-faint);
+    font-size: 13.5px;
+  }
+  .btn-draw{
+    background: var(--pericles);
+    border: none;
+    color: #0a1622;
+    font-weight: 700;
+    font-size: 14.5px;
+    padding: 13px 26px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: transform .12s ease, filter .12s ease;
+    white-space: nowrap;
+  }
+  .btn-draw:hover{ filter: brightness(1.08); }
+  .btn-draw:active{ transform: scale(0.97); }
+  .btn-draw:disabled{
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: none;
+    transform: none;
+  }
+  @keyframes drawPop{
+    0%{ transform: scale(0.96); opacity: 0.4; }
+    100%{ transform: scale(1); opacity: 1; }
+  }
+  .draw-result.pop{ animation: drawPop .25s ease; }
 
   footer.app-footer{
     text-align:center;
@@ -339,7 +519,7 @@
 
   <header class="top">
     <div>
-      <h1>🎬 Nosso Cinema</h1>
+      <h1>Filmes</h1>
       <div class="subtitle">Histórico e planos de filmes — Gabrielle &amp; Péricles</div>
     </div>
     <div class="legend-pair">
@@ -352,28 +532,45 @@
   <section>
     <div class="kpi-grid" id="kpiGrid">
       <div class="kpi-card">
-        <div class="label">Total de filmes</div>
-        <div class="value" id="kpiTotal">-</div>
+        <div class="kpi-total-row">
+          <div class="label">Total de filmes</div>
+          <div class="value" id="kpiTotal">-</div>
+        </div>
+        <div class="kpi-status-buttons">
+          <button class="status-btn assistidos" id="btnStatusAssistidos" type="button">
+            <span class="status-btn-value" id="kpiAssistidos">-</span>
+            <span class="status-btn-label">Assistidos</span>
+          </button>
+          <button class="status-btn pendentes" id="btnStatusPendentes" type="button">
+            <span class="status-btn-value" id="kpiPendentes">-</span>
+            <span class="status-btn-label">Pendentes</span>
+          </button>
+        </div>
       </div>
       <div class="kpi-card">
-        <div class="label">Assistidos</div>
-        <div class="value" id="kpiAssistidos">-</div>
+        <div class="label">Médias de avaliação</div>
+        <div class="kpi-medias-row">
+          <div class="media-item gabrielle">
+            <div class="media-value" id="kpiMediaG">-</div>
+            <div class="media-name">Gabrielle</div>
+          </div>
+          <div class="media-item pericles">
+            <div class="media-value" id="kpiMediaP">-</div>
+            <div class="media-name">Péricles</div>
+          </div>
+          <div class="media-item casal">
+            <div class="media-value" id="kpiMediaCasal">-</div>
+            <div class="media-name">Casal</div>
+          </div>
+        </div>
       </div>
-      <div class="kpi-card">
-        <div class="label">Pendentes</div>
-        <div class="value" id="kpiPendentes">-</div>
-      </div>
-      <div class="kpi-card gabrielle">
-        <div class="label">Média Gabrielle</div>
-        <div class="value small" id="kpiMediaG">-</div>
-      </div>
-      <div class="kpi-card pericles">
-        <div class="label">Média Péricles</div>
-        <div class="value small" id="kpiMediaP">-</div>
-      </div>
-      <div class="kpi-card casal">
-        <div class="label">Média do casal</div>
-        <div class="value small" id="kpiMediaCasal">-</div>
+      <div class="kpi-card kpi-last-card">
+        <div class="last-icon">🍿</div>
+        <div class="last-body">
+          <div class="label" style="margin-bottom:6px;">Último filme assistido</div>
+          <div class="last-name" id="lastMovieName">-</div>
+          <div class="last-meta" id="lastMovieMeta"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -382,14 +579,9 @@
   <section>
     <div class="section-title">Análises</div>
     <div class="chart-grid">
-      <div class="chart-card">
-        <h3>Assistidos x Pendentes</h3>
-        <div class="chart-sub">Status geral da lista</div>
-        <canvas id="chartStatus"></canvas>
-      </div>
-      <div class="chart-card">
-        <h3>Filmes por gênero</h3>
-        <div class="chart-sub">Quantidade de filmes em cada gênero</div>
+      <div class="chart-card clickable">
+        <h3>Filmes por gênero <span id="generoFilterTag"></span></h3>
+        <div class="chart-sub">Clique em uma barra para filtrar por gênero</div>
         <canvas id="chartGenero"></canvas>
       </div>
       <div class="chart-card tall">
@@ -433,11 +625,18 @@
     </div>
   </section>
 
-  <!-- DESTAQUES -->
+  <!-- SORTEADOR -->
   <section>
-    <div class="section-title">Destaques</div>
-    <div class="highlight-grid" id="highlightGrid">
-      <!-- preenchido via JS -->
+    <div class="section-title">Sorteador de filme pendente</div>
+    <div class="draw-card">
+      <div class="draw-info">
+        <div class="draw-count" id="drawCount">-</div>
+        <div class="draw-count-label">filmes pendentes disponíveis</div>
+      </div>
+      <div class="draw-result" id="drawResult">
+        <span class="draw-placeholder">Clique em "Sortear" para escolher o próximo filme</span>
+      </div>
+      <button class="btn-draw" id="btnDraw">🎲 Sortear</button>
     </div>
   </section>
 
@@ -530,10 +729,12 @@ function csvRowsToMovies(rows){
     streaming: header.indexOf('Streaming'),
     notaG: header.indexOf('Nota Gabrielle'),
     notaP: header.indexOf('Nota Pericles'),
-    genero: header.indexOf('Gênero')
+    genero: header.indexOf('Gênero'),
+    ingles: header.indexOf('Inglês')
   };
 
-  const missing = Object.entries(idx).filter(([, v]) => v === -1).map(([k]) => k);
+  const required = ['filme', 'visto', 'vistoG', 'vistoP', 'data', 'streaming', 'notaG', 'notaP', 'genero'];
+  const missing = required.filter(k => idx[k] === -1);
   if(missing.length){
     throw new Error('Colunas não encontradas na planilha: ' + missing.join(', '));
   }
@@ -549,7 +750,8 @@ function csvRowsToMovies(rows){
       streaming: (r[idx.streaming] || 'Não definido').trim() || 'Não definido',
       notaG: parseNota(r[idx.notaG]),
       notaP: parseNota(r[idx.notaP]),
-      genero: (r[idx.genero] || 'Não definido').trim() || 'Não definido'
+      genero: (r[idx.genero] || 'Não definido').trim() || 'Não definido',
+      ingles: idx.ingles !== -1 ? (r[idx.ingles] || '').trim() : ''
     }));
 }
 
@@ -639,31 +841,7 @@ function destroyChart(key){
   if(charts[key]){ charts[key].destroy(); charts[key] = null; }
 }
 
-function renderStatusChart(data){
-  const ctx = document.getElementById('chartStatus').getContext('2d');
-  const assistidos = data.filter(d => d.visto).length;
-  const pendentes = data.length - assistidos;
-  destroyChart('status');
-  charts.status = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Assistidos', 'Pendentes'],
-      datasets: [{
-        data: [assistidos, pendentes],
-        backgroundColor: ['#4ac98a', '#3a4050'],
-        borderColor: '#12151c',
-        borderWidth: 3
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: '65%',
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#9aa1b2', font: { size: 12 }, padding: 16 } }
-      }
-    }
-  });
-}
+const GENERO_BASE_COLOR = '99, 214, 255'; // azul vibrante em rgb, opacidade variável por quantidade
 
 function renderGeneroChart(data){
   const ctx = document.getElementById('chartGenero').getContext('2d');
@@ -675,6 +853,16 @@ function renderGeneroChart(data){
     charts.genero = null;
     return;
   }
+  const generoAtivo = document.getElementById('fGenero').value;
+  const maxCount = Math.max(...entries.map(e => e[1]));
+  const minCount = Math.min(...entries.map(e => e[1]));
+  const colors = entries.map((e) => {
+    // opacidade proporcional à quantidade de filmes no gênero (0.25 a 1.0)
+    const ratio = maxCount === minCount ? 1 : (e[1] - minCount) / (maxCount - minCount);
+    const alpha = 0.25 + ratio * 0.75;
+    const dimmed = generoAtivo && e[0] !== generoAtivo;
+    return `rgba(${GENERO_BASE_COLOR}, ${dimmed ? alpha * 0.35 : alpha})`;
+  });
   charts.genero = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -682,7 +870,7 @@ function renderGeneroChart(data){
       datasets: [{
         label: 'Filmes',
         data: entries.map(e => e[1]),
-        backgroundColor: '#e6b04a',
+        backgroundColor: colors,
         borderRadius: 6,
         maxBarThickness: 28
       }]
@@ -690,6 +878,14 @@ function renderGeneroChart(data){
     options: {
       indexAxis: 'y',
       responsive: true,
+      onClick: (evt, elements) => {
+        if(!elements.length) return;
+        const idx = elements[0].index;
+        const genero = entries[idx][0];
+        const sel = document.getElementById('fGenero');
+        sel.value = (sel.value === genero) ? '' : genero;
+        renderAll();
+      },
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { color: '#9aa1b2', precision:0 }, grid: { color: '#1c202a' } },
@@ -810,72 +1006,68 @@ function renderKPIs(data){
   document.getElementById('kpiMediaG').textContent = mg != null ? fmt1(mg) : '—';
   document.getElementById('kpiMediaP').textContent = mp != null ? fmt1(mp) : '—';
   document.getElementById('kpiMediaCasal').textContent = mc != null ? fmt1(mc) : '—';
+
+  const status = document.getElementById('fStatus').value;
+  document.getElementById('btnStatusAssistidos').classList.toggle('active', status === 'visto');
+  document.getElementById('btnStatusPendentes').classList.toggle('active', status === 'pendente');
 }
 
-/* ===================== HIGHLIGHTS ===================== */
-function renderHighlights(data){
-  const grid = document.getElementById('highlightGrid');
-  grid.innerHTML = '';
+function renderUltimoFilme(){
+  const assistidosComData = DATA.filter(d => d.visto && d.dataObj);
+  const metaEl = document.getElementById('lastMovieMeta');
+  const nameEl = document.getElementById('lastMovieName');
 
-  const comMedia = data.filter(d => d.media != null);
-  const comDiff = data.filter(d => d.diff != null);
-
-  let topMedia = null;
-  if(comMedia.length){
-    topMedia = comMedia.reduce((best, cur) => cur.media > best.media ? cur : best);
+  if(assistidosComData.length === 0){
+    nameEl.textContent = 'Nenhum filme assistido ainda';
+    metaEl.innerHTML = '';
+    return;
   }
 
-  let topDiff = null;
-  if(comDiff.length){
-    topDiff = comDiff.reduce((best, cur) => cur.diff > best.diff ? cur : best);
-  }
+  const ultimo = assistidosComData.reduce((mais, cur) => cur.dataObj > mais.dataObj ? cur : mais);
+  nameEl.textContent = ultimo.filme;
 
-  const generoCounts = {};
-  data.forEach(m => { generoCounts[m.genero] = (generoCounts[m.genero] || 0) + 1; });
-  const generoEntries = Object.entries(generoCounts).filter(([g]) => g !== 'Não definido').sort((a,b)=>b[1]-a[1]);
-  const topGenero = generoEntries.length ? generoEntries[0] : null;
-
-  const novosParaOsDois = data.filter(d => d.novoParaOsDois).length;
-
-  const cards = [
-    {
-      icon: '⭐',
-      label: 'Maior média',
-      value: topMedia ? topMedia.filme : 'Sem dados suficientes',
-      detail: topMedia ? `Média ${fmt1(topMedia.media)}` : ''
-    },
-    {
-      icon: '⚡',
-      label: 'Maior divergência de notas',
-      value: topDiff ? topDiff.filme : 'Sem dados suficientes',
-      detail: topDiff ? `Diferença de ${fmt1(topDiff.diff)} pontos` : ''
-    },
-    {
-      icon: '🎭',
-      label: 'Gênero mais frequente',
-      value: topGenero ? topGenero[0] : 'Sem dados suficientes',
-      detail: topGenero ? `${topGenero[1]} filme${topGenero[1] > 1 ? 's' : ''}` : ''
-    },
-    {
-      icon: '🆕',
-      label: 'Novos para os dois',
-      value: `${novosParaOsDois} filme${novosParaOsDois !== 1 ? 's' : ''}`,
-      detail: 'Nenhum dos dois tinha visto antes'
-    }
-  ];
-
-  cards.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'hl-card';
-    div.innerHTML = `
-      <div class="hl-icon">${c.icon}</div>
-      <div class="hl-label">${c.label}</div>
-      <div class="hl-value">${c.value}</div>
-      <div class="hl-detail">${c.detail}</div>
-    `;
-    grid.appendChild(div);
-  });
+  const partes = [];
+  if(ultimo.media != null) partes.push(`<span class="last-note">⭐ ${fmt1(ultimo.media)}</span>`);
+  if(ultimo.streaming) partes.push(`<span>📺 ${ultimo.streaming}</span>`);
+  if(ultimo.data) partes.push(`<span>📅 ${ultimo.data}</span>`);
+  metaEl.innerHTML = partes.join('');
 }
+
+/* ===================== SORTEADOR ===================== */
+function getPendentesForDraw(){
+  // Respeita os filtros de gênero/streaming/busca aplicados, mas sempre restrito a pendentes
+  return getFilteredData().filter(m => !m.visto);
+}
+
+function renderDrawCount(){
+  const pendentes = getPendentesForDraw();
+  document.getElementById('drawCount').textContent = pendentes.length;
+}
+
+function sortearFilme(){
+  const pendentes = getPendentesForDraw();
+  const resultEl = document.getElementById('drawResult');
+
+  if(pendentes.length === 0){
+    resultEl.classList.remove('hit');
+    resultEl.innerHTML = '<span class="draw-empty">Nenhum filme pendente com os filtros atuais.</span>';
+    return;
+  }
+
+  const escolhido = pendentes[Math.floor(Math.random() * pendentes.length)];
+
+  resultEl.classList.remove('pop');
+  void resultEl.offsetWidth; // reinicia a animação
+  resultEl.classList.add('hit', 'pop');
+  resultEl.innerHTML = `
+    <div>
+      <div class="draw-movie-name">🎬 ${escolhido.filme}</div>
+      <div class="draw-movie-meta">${escolhido.genero} · ${escolhido.streaming}</div>
+    </div>
+  `;
+}
+
+document.getElementById('btnDraw').addEventListener('click', sortearFilme);
 
 /* ===================== TABLE ===================== */
 function renderTable(data){
@@ -914,9 +1106,12 @@ function renderTable(data){
     const notaP = m.notaP != null ? `<span class="note-p">${fmt1(m.notaP)}</span>` : '<span class="muted">—</span>';
     const media = m.media != null ? `<span class="note-avg">${fmt1(m.media)}</span>` : '<span class="muted">—</span>';
     const data = m.data ? m.data : '<span class="muted">—</span>';
+    const filmeCell = m.ingles
+      ? `<span class="filme-nome" title="${m.ingles.replace(/"/g, '&quot;')}">${m.filme}</span>`
+      : `<span class="filme-nome">${m.filme}</span>`;
 
     tr.innerHTML = `
-      <td>${m.filme}</td>
+      <td>${filmeCell}</td>
       <td>${statusBadge}</td>
       <td>${m.genero}</td>
       <td>${m.streaming}</td>
@@ -954,11 +1149,11 @@ function safeRun(label, fn){
 function renderAll(){
   const filtered = getFilteredData();
   safeRun('KPIs', () => renderKPIs(filtered));
-  safeRun('gráfico de status', () => renderStatusChart(filtered));
+  safeRun('último filme', () => renderUltimoFilme());
+  safeRun('sorteador', () => renderDrawCount());
   safeRun('gráfico de gênero', () => renderGeneroChart(filtered));
   safeRun('gráfico de nota por gênero', () => renderNotaGeneroChart(filtered));
   safeRun('gráfico de dispersão', () => renderDispersaoChart(filtered));
-  safeRun('destaques', () => renderHighlights(filtered));
   safeRun('tabela', () => renderTable(filtered));
 }
 
@@ -973,6 +1168,18 @@ document.getElementById('btnClear').addEventListener('click', () => {
   document.getElementById('fGenero').value = '';
   document.getElementById('fStreaming').value = '';
   document.getElementById('fBusca').value = '';
+  renderAll();
+});
+
+document.getElementById('btnStatusAssistidos').addEventListener('click', () => {
+  const sel = document.getElementById('fStatus');
+  sel.value = (sel.value === 'visto') ? '' : 'visto';
+  renderAll();
+});
+
+document.getElementById('btnStatusPendentes').addEventListener('click', () => {
+  const sel = document.getElementById('fStatus');
+  sel.value = (sel.value === 'pendente') ? '' : 'pendente';
   renderAll();
 });
 
