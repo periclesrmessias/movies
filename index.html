@@ -29,8 +29,12 @@
     margin:0; padding:0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+    font-family: "Aptos Narrow", "Aptos", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6{
+    font-family: "Aptos Display", "Aptos", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
   }
 
   body{
@@ -224,6 +228,7 @@
     text-transform: uppercase;
     letter-spacing: .06em;
     margin: 0 0 14px 2px;
+    font-family: "Aptos Display", "Aptos", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
   }
 
   /* CHARTS */
@@ -396,9 +401,22 @@
     border-bottom: 1px dotted var(--text-faint);
   }
 
+  a.filme-nome{
+    color: var(--text);
+    text-decoration: none;
+  }
+  a.filme-nome.filme-link{
+    border-bottom: 1px dotted var(--text-faint);
+  }
+  a.filme-nome.filme-link:hover{
+    color: var(--pericles);
+    border-bottom-color: var(--pericles);
+  }
+
   .note-g{ color: var(--gabrielle); font-weight: 600; }
   .note-p{ color: var(--pericles); font-weight: 600; }
   .note-avg{ color: var(--accent); font-weight: 700; }
+  .note-imdb{ color: #f5c518; font-weight: 700; }
   .muted{ color: var(--text-faint); }
 
   .table-footer{
@@ -594,6 +612,26 @@
         <div class="chart-sub">Comparação das notas individuais, filme a filme</div>
         <canvas id="chartDispersao"></canvas>
       </div>
+      <div class="chart-card tall">
+        <h3>Evolução das notas</h3>
+        <div class="chart-sub">Média móvel das avaliações do casal ao longo do tempo</div>
+        <canvas id="chartEvolucao"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- SORTEADOR -->
+  <section>
+    <div class="section-title">Sorteador de filme pendente</div>
+    <div class="draw-card">
+      <div class="draw-info">
+        <div class="draw-count" id="drawCount">-</div>
+        <div class="draw-count-label">filmes pendentes disponíveis</div>
+      </div>
+      <div class="draw-result" id="drawResult">
+        <span class="draw-placeholder">Clique em "Sortear" para escolher o próximo filme</span>
+      </div>
+      <button class="btn-draw" id="btnDraw">🎲 Sortear</button>
     </div>
   </section>
 
@@ -625,21 +663,6 @@
     </div>
   </section>
 
-  <!-- SORTEADOR -->
-  <section>
-    <div class="section-title">Sorteador de filme pendente</div>
-    <div class="draw-card">
-      <div class="draw-info">
-        <div class="draw-count" id="drawCount">-</div>
-        <div class="draw-count-label">filmes pendentes disponíveis</div>
-      </div>
-      <div class="draw-result" id="drawResult">
-        <span class="draw-placeholder">Clique em "Sortear" para escolher o próximo filme</span>
-      </div>
-      <button class="btn-draw" id="btnDraw">🎲 Sortear</button>
-    </div>
-  </section>
-
   <!-- TABELA -->
   <section>
     <div class="section-title">Lista de filmes</div>
@@ -655,6 +678,7 @@
               <th data-key="notaG">Nota Gabrielle<span class="arrow"></span></th>
               <th data-key="notaP">Nota Péricles<span class="arrow"></span></th>
               <th data-key="media">Média<span class="arrow"></span></th>
+              <th data-key="imdb">IMDb<span class="arrow"></span></th>
               <th data-key="dataOrd">Data<span class="arrow"></span></th>
             </tr>
           </thead>
@@ -730,7 +754,9 @@ function csvRowsToMovies(rows){
     notaG: header.indexOf('Nota Gabrielle'),
     notaP: header.indexOf('Nota Pericles'),
     genero: header.indexOf('Gênero'),
-    ingles: header.indexOf('Inglês')
+    ingles: header.indexOf('Inglês'),
+    imdb: header.indexOf('IMDb'),
+    trailer: header.indexOf('Trailer')
   };
 
   const required = ['filme', 'visto', 'vistoG', 'vistoP', 'data', 'streaming', 'notaG', 'notaP', 'genero'];
@@ -751,7 +777,9 @@ function csvRowsToMovies(rows){
       notaG: parseNota(r[idx.notaG]),
       notaP: parseNota(r[idx.notaP]),
       genero: (r[idx.genero] || 'Não definido').trim() || 'Não definido',
-      ingles: idx.ingles !== -1 ? (r[idx.ingles] || '').trim() : ''
+      ingles: idx.ingles !== -1 ? (r[idx.ingles] || '').trim() : '',
+      imdb: idx.imdb !== -1 ? parseNota(r[idx.imdb]) : null,
+      trailer: idx.trailer !== -1 ? (r[idx.trailer] || '').trim() : ''
     }));
 }
 
@@ -986,6 +1014,71 @@ function renderDispersaoChart(data){
   });
 }
 
+function renderEvolucaoChart(data){
+  const ctx = document.getElementById('chartEvolucao').getContext('2d');
+  destroyChart('evolucao');
+
+  const comData = data
+    .filter(m => m.visto && m.dataObj && m.media != null)
+    .sort((a, b) => a.dataObj - b.dataObj);
+
+  if(comData.length === 0){
+    charts.evolucao = null;
+    return;
+  }
+
+  // média móvel simples (janela de 5 filmes) para suavizar a evolução
+  const janela = 5;
+  const pontos = comData.map((m, i) => {
+    const inicio = Math.max(0, i - janela + 1);
+    const fatia = comData.slice(inicio, i + 1);
+    const media = fatia.reduce((acc, f) => acc + f.media, 0) / fatia.length;
+    const label = m.dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    return { label, y: Math.round(media * 100) / 100, filme: m.filme, notaBruta: m.media };
+  });
+
+  charts.evolucao = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: pontos.map(p => p.label),
+      datasets: [{
+        label: 'Média móvel (últimos 5 filmes)',
+        data: pontos.map(p => p.y),
+        borderColor: COLOR_ACCENT,
+        backgroundColor: 'rgba(230,176,74,0.12)',
+        pointRadius: 2,
+        pointHoverRadius: 6,
+        pointBackgroundColor: COLOR_ACCENT,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => pontos[items[0].dataIndex].filme,
+            label: (ctx) => {
+              const p = pontos[ctx.dataIndex];
+              return `Média móvel: ${fmt1(p.y)} · Nota do filme: ${fmt1(p.notaBruta)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#9aa1b2', maxRotation: 40, minRotation: 0, autoSkip: true, maxTicksLimit: 10 },
+          grid: { display: false }
+        },
+        y: { min: 0, max: 5, ticks: { color: '#9aa1b2' }, grid: { color: '#1c202a' } }
+      }
+    }
+  });
+}
+
 /* ===================== KPIs ===================== */
 function renderKPIs(data){
   const total = data.length;
@@ -1105,10 +1198,13 @@ function renderTable(data){
     const notaG = m.notaG != null ? `<span class="note-g">${fmt1(m.notaG)}</span>` : '<span class="muted">—</span>';
     const notaP = m.notaP != null ? `<span class="note-p">${fmt1(m.notaP)}</span>` : '<span class="muted">—</span>';
     const media = m.media != null ? `<span class="note-avg">${fmt1(m.media)}</span>` : '<span class="muted">—</span>';
+    const imdb = m.imdb != null ? `<span class="note-imdb">${fmt1(m.imdb)}</span>` : '<span class="muted">—</span>';
     const data = m.data ? m.data : '<span class="muted">—</span>';
-    const filmeCell = m.ingles
-      ? `<span class="filme-nome" title="${m.ingles.replace(/"/g, '&quot;')}">${m.filme}</span>`
-      : `<span class="filme-nome">${m.filme}</span>`;
+
+    const tituloAttr = m.ingles ? ` title="${m.ingles.replace(/"/g, '&quot;')}"` : '';
+    const filmeCell = m.trailer
+      ? `<a class="filme-nome filme-link" href="${m.trailer.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer"${tituloAttr}>${m.filme}</a>`
+      : `<span class="filme-nome"${tituloAttr}>${m.filme}</span>`;
 
     tr.innerHTML = `
       <td>${filmeCell}</td>
@@ -1118,6 +1214,7 @@ function renderTable(data){
       <td>${notaG}</td>
       <td>${notaP}</td>
       <td>${media}</td>
+      <td>${imdb}</td>
       <td>${data}</td>
     `;
     tbody.appendChild(tr);
@@ -1154,6 +1251,7 @@ function renderAll(){
   safeRun('gráfico de gênero', () => renderGeneroChart(filtered));
   safeRun('gráfico de nota por gênero', () => renderNotaGeneroChart(filtered));
   safeRun('gráfico de dispersão', () => renderDispersaoChart(filtered));
+  safeRun('gráfico de evolução', () => renderEvolucaoChart(filtered));
   safeRun('tabela', () => renderTable(filtered));
 }
 
