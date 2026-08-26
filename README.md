@@ -1,62 +1,102 @@
-# Nosso Cinema
+# Movie Dashboard
 
-Dashboard de filmes assistidos e pendentes, com dados sincronizados direto do Google Sheets.
+A single-file HTML dashboard for couples (or any duo) to track movies watched together: ratings, streaming platforms, genres, charts, and a "spin the wheel" picker for what to watch next. No backend, no build step — data lives in a Google Sheet and the page just reads it.
 
-## Como funciona
+![status](https://img.shields.io/badge/stack-HTML%20%2B%20JS-blue) ![data](https://img.shields.io/badge/data-Google%20Sheets%20CSV-green)
 
-O arquivo `index.html` busca os dados da planilha publicada em CSV toda vez que a página é aberta (`fetch` no carregamento). Não existe build, backend ou GitHub Actions: é um único arquivo estático que lê a planilha em tempo real no navegador de quem acessa.
+## What it does
 
-Fluxo: Google Sheets (aba "Filmes") → Publicar na web (CSV) → `index.html` busca e renderiza.
+- **KPI cards**: total movies, watched vs pending counts, individual and combined average ratings, and a highlight card for the last movie watched.
+- **Filters**: by status (watched/pending), genre, streaming service, and free-text search.
+- **Sortable table**: every movie with both people's ratings, the combined average, IMDb rating, and watch date. Click any column header to sort.
+- **Charts** (via Chart.js): movie count by genre, average rating by genre per person, a scatter plot comparing both people's ratings side by side, and a rolling-average trend of ratings over time.
+- **Random picker**: draws a random movie from the currently filtered pending list — useful for "we can't decide what to watch" nights.
+- **Offline-safe fallback**: if the spreadsheet can't be reached, the page falls back to a locally embedded snapshot of the data so it never shows a blank screen.
 
-## Publicar no GitHub Pages
+## How it works
 
-1. Copie o arquivo `index.html` para a raiz do repositório `movies` (substituindo o que já existe, se houver).
-2. Faça commit e push para a branch `main`.
-3. No GitHub: Settings → Pages → em "Build and deployment", Source = "Deploy from a branch", Branch = `main` / `/(root)`. Salve.
-4. Em alguns minutos o dashboard estará em `https://SEU_USUARIO.github.io/movies/`.
+The entire app is one `index.html` file: HTML, CSS, and JavaScript inline, no build tools, no dependencies to install. It only pulls two things over the network:
 
-Comandos via linha de comando, se preferir:
+1. **Chart.js**, loaded from a CDN (with a second CDN as fallback if the first fails).
+2. **Your data**, as a CSV, fetched directly from a published Google Sheet.
 
-```bash
-git clone https://github.com/SEU_USUARIO/movies.git
-cp index.html movies/index.html
-cd movies
-git add index.html
-git commit -m "Dashboard com dados dinâmicos do Google Sheets"
-git push
+On load, the page fetches the CSV, parses it with a small custom parser (handles quoted fields, commas and line breaks inside cells), transforms each row into a movie object, and renders everything from that in-memory array. Every filter, sort, and chart interaction re-runs against that same array — there's no server round-trip after the initial load.
+
+## Setting up your own copy
+
+### 1. Create the spreadsheet
+
+Create a Google Sheet with one row per movie and these columns (header names are up to you, just keep the mapping consistent when you edit the parsing code):
+
+| Column | Meaning | Example |
+|---|---|---|
+| Movie title | Display name | `Whiplash` |
+| Watched (person A) | Boolean | `TRUE` / `FALSE` |
+| Watched (person B) | Boolean | `TRUE` / `FALSE` |
+| Date watched | `DD/MM/YYYY` or empty | `12/06/2026` |
+| Streaming service | Free text | `Netflix`, `HBO`, `Cinema`... |
+| Rating (person A) | Number 0–5, or blank | `4.3` |
+| Rating (person B) | Number 0–5, or blank | `4.6` |
+| Genre | Free text | `Drama` |
+| Trailer link (optional) | URL | `https://youtube.com/...` |
+| Original title (optional) | For a tooltip | `Whiplash` |
+| Add any other column you want| - | - |
+
+A movie counts as "watched" once both people have marked it. The combined rating is simply the average of the two individual ratings (or just one, if only one person rated it).
+
+### 2. Publish the sheet as CSV
+
+In Google Sheets: **File → Share → Publish to web**, choose the specific tab, select **CSV** as the format, and publish. Copy the generated URL.
+
+### 3. Point the page at your sheet
+
+Open `index.html` and update this line near the top of the `<script>` block:
+
+```js
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?gid=...&single=true&output=csv";
 ```
 
-## Manter a planilha publicada corretamente
+### 4. Adjust the CSV-to-object mapping
 
-O link CSV usado no dashboard depende da planilha continuar publicada nesse formato específico:
+The function that turns each CSV row into a movie object expects specific column positions or names. Update it to match your sheet's actual column order or headers, and adjust the `FALLBACK_DATA` array (a hardcoded snapshot near the bottom of the script) so the page still shows something meaningful if the fetch fails.
 
-1. No Google Sheets, na aba **Filmes**: Arquivo → Compartilhar → **Publicar na web**.
-2. Em "Link", selecione a aba **Filmes** (não "Todo o documento") e o formato **CSV**.
-3. Clique em Publicar.
-4. Qualquer edição na planilha aparece automaticamente no CSV publicado em poucos minutos — não é necessário republicar depois de cada alteração, só na primeira configuração.
+### 5. Customize the look
 
-Se algum dia trocar de planilha ou de aba, é só gerar um novo link (mesmo processo) e atualizar a constante `SHEET_CSV_URL` no topo do `<script>` do `index.html`.
+All colors and identity are CSS variables at the top of the `<style>` block:
 
-## Estrutura de colunas esperada na aba "Filmes"
+```css
+:root{
+  --gabrielle: #e0568c;  /* person A's color, used in charts and ratings */
+  --pericles: #4aa8e6;   /* person B's color */
+  --accent: #e6b04a;     /* combined/couple accent color */
+  ...
+}
+```
 
-| Coluna na planilha | Uso no dashboard |
-|---|---|
-| Filme | Nome do filme |
-| Visto | `TRUE`/`FALSE` — se já foi assistido pelo casal |
-| Visto Antes G. | `TRUE`/`FALSE` — se Gabrielle já tinha visto antes |
-| Visto Antes P. | `TRUE`/`FALSE` — se Péricles já tinha visto antes |
-| Data | Data no formato `DD/MM/AAAA` (pode ficar vazia) |
-| Streaming | Onde está disponível |
-| Nota Gabrielle | Nota de 0 a 5 (aceita vírgula ou ponto decimal) |
-| Nota Pericles | Nota de 0 a 5 (aceita vírgula ou ponto decimal) |
-| Gênero | Categoria do filme |
+Rename the CSS classes (`.gabrielle`, `.pericles`) and the labels in the HTML/JS to match your own names, and swap the colors to taste.
 
-Não altere os nomes dessas colunas na planilha sem também atualizar o mapeamento em `csvRowsToMovies()` dentro do `index.html`.
+### 6. Host it
 
-## Comportamento em caso de falha
+Since it's a static file with no backend, any static host works: GitHub Pages, Netlify, Vercel, or just opening the file locally. GitHub Pages is the simplest free option:
 
-Se o dashboard não conseguir buscar a planilha (sem internet, planilha despublicada, etc.), ele exibe um aviso no topo e cai automaticamente para os dados salvos localmente no arquivo (a última versão conhecida), então o site nunca fica quebrado.
+1. Push `index.html` to a repository.
+2. Enable GitHub Pages for that repo (Settings → Pages → deploy from branch).
+3. Share the resulting URL.
 
-## Compartilhar com a Gabrielle
+## Updating your data
 
-Basta enviar o link `https://SEU_USUARIO.github.io/movies/`. Não precisa de login nem permissão especial — a página é pública, e os dados são sempre os mais recentes da planilha no momento em que ela abrir o link.
+No redeploy needed. Just edit the Google Sheet — the page fetches fresh data (`cache: 'no-store'`) every time it loads.
+
+## Tech notes
+
+- **No frameworks.** Vanilla JS, DOM manipulation, and Chart.js for the four charts.
+- **CSV parsing is hand-rolled** to correctly handle quoted fields containing commas or newlines, since Google's published CSV export can include those.
+- **Resilience by design**: a missing Chart.js load, a failed CSV fetch, or a rendering error in any single widget won't break the rest of the page — each render function is wrapped and failures are logged to the console with a visible banner shown to the user when relevant.
+- **No backend, no auth, no database.** This trades live collaborative editing (you edit the sheet, not the page) for zero maintenance and zero cost.
+
+## Possible extensions
+
+- Add a "watchlist priority" score or tags.
+- Support more than two raters.
+- Add a poster fetch from an external movie API (OMDb, TMDb) using the title as the query.
+- Persist the random-draw history so the same pending movie isn't suggested twice in a row.
