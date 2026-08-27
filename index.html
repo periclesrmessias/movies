@@ -687,6 +687,33 @@
     </div>
   </section>
 
+  <!-- NEW: BUSINESS & PRODUCTION DATA SECTION -->
+  <section>
+    <div class="section-title">💰 Dados de Negócio & Produção</div>
+    <div class="chart-grid">
+      <div class="chart-card tall">
+        <h3>ROI vs Orçamento</h3>
+        <div class="chart-sub">Retorno sobre investimento em relação ao orçamento do filme</div>
+        <canvas id="chartRoiBudget"></canvas>
+      </div>
+      <div class="chart-card tall">
+        <h3>Bilheteria por Faixa de Orçamento</h3>
+        <div class="chart-sub">Desempenho de bilheteria agrupado por faixa de orçamento</div>
+        <canvas id="chartBilheteiraOrcamento"></canvas>
+      </div>
+      <div class="chart-card tall">
+        <h3>Top 10 Diretores</h3>
+        <div class="chart-sub">Diretores com mais filmes no acervo</div>
+        <canvas id="chartDiretores"></canvas>
+      </div>
+      <div class="chart-card tall">
+        <h3>Votos TMDB vs Nota Média</h3>
+        <div class="chart-sub">Correlação entre popularidade (votos) e avaliação do casal</div>
+        <canvas id="chartVotosNota"></canvas>
+      </div>
+    </div>
+  </section>
+
   <footer class="app-footer">Feito com carinho para maratonas futuras 🍿</footer>
 </div>
 
@@ -754,7 +781,20 @@ function csvRowsToMovies(rows){
     genero: header.indexOf('Gênero'),
     ingles: header.indexOf('Inglês'),
     imdb: header.indexOf('IMDb'),
-    trailer: header.indexOf('Trailer')
+    trailer: header.indexOf('Trailer'),
+    // Novos campos (M-X)
+    tmdbId: header.indexOf('TMDB ID'),
+    notaTmdb: header.indexOf('Nota TMDB'),
+    votosTmdb: header.indexOf('Votos TMDB'),
+    diretor: header.indexOf('Diretor'),
+    elenco: header.indexOf('Elenco'),
+    duracao: header.indexOf('Duração'),
+    orcamento: header.indexOf('Orçamento'),
+    bilheteria: header.indexOf('Bilheteria'),
+    lucro: header.indexOf('Lucro'),
+    roi: header.indexOf('ROI'),
+    poster: header.indexOf('Poster'),
+    sinopse: header.indexOf('Sinopse')
   };
 
   const required = ['filme', 'visto', 'vistoG', 'vistoP', 'data', 'streaming', 'notaG', 'notaP', 'genero'];
@@ -777,7 +817,20 @@ function csvRowsToMovies(rows){
       genero: (r[idx.genero] || 'Não definido').trim() || 'Não definido',
       ingles: idx.ingles !== -1 ? (r[idx.ingles] || '').trim() : '',
       imdb: idx.imdb !== -1 ? parseNota(r[idx.imdb]) : null,
-      trailer: idx.trailer !== -1 ? (r[idx.trailer] || '').trim() : ''
+      trailer: idx.trailer !== -1 ? (r[idx.trailer] || '').trim() : '',
+      // Novos campos
+      tmdbId: idx.tmdbId !== -1 ? (r[idx.tmdbId] || '').trim() : '',
+      notaTmdb: idx.notaTmdb !== -1 ? parseNota(r[idx.notaTmdb]) : null,
+      votosTemudb: idx.votosTmdb !== -1 ? parseInt(r[idx.votosTmdb]) || null : null,
+      diretor: idx.diretor !== -1 ? (r[idx.diretor] || '').trim() : '',
+      elenco: idx.elenco !== -1 ? (r[idx.elenco] || '').trim() : '',
+      duracao: idx.duracao !== -1 ? parseInt(r[idx.duracao]) || null : null,
+      orcamento: idx.orcamento !== -1 ? parseInt(r[idx.orcamento]) || null : null,
+      bilheteria: idx.bilheteria !== -1 ? parseInt(r[idx.bilheteria]) || null : null,
+      lucro: idx.lucro !== -1 ? parseInt(r[idx.lucro]) || null : null,
+      roi: idx.roi !== -1 ? parseFloat(r[idx.roi]) || null : null,
+      poster: idx.poster !== -1 ? (r[idx.poster] || '').trim() : '',
+      sinopse: idx.sinopse !== -1 ? (r[idx.sinopse] || '').trim() : ''
     }));
 }
 
@@ -1077,6 +1130,258 @@ function renderEvolucaoChart(data){
   });
 }
 
+/* ===================== NEW CHARTS: BUSINESS DATA ===================== */
+function renderRoiBudgetChart(data){
+  const comDados = data.filter(m => m.orcamento && m.roi);
+  const ctx = document.getElementById('chartRoiBudget').getContext('2d');
+
+  destroyChart('roiBudget');
+
+  if(comDados.length === 0){
+    charts.roiBudget = null;
+    return;
+  }
+
+  const colors = comDados.map(m => {
+    if(m.roi >= 2) return 'rgba(74,201,138,0.7)';
+    if(m.roi >= 1) return 'rgba(230,176,74,0.7)';
+    return 'rgba(224,86,140,0.7)';
+  });
+
+  charts.roiBudget = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'ROI vs Orçamento',
+        data: comDados.map(m => ({ x: m.orcamento / 1000000, y: m.roi })),
+        backgroundColor: colors,
+        borderColor: colors.map(c => c.replace('0.7', '1')),
+        borderWidth: 1,
+        pointRadius: 5,
+        pointHoverRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => comDados[items[0].dataIndex].filme,
+            label: (ctx) => {
+              const m = comDados[ctx.dataIndex];
+              return `Orçamento: $${fmt1(m.orcamento / 1000000)}M · ROI: ${fmt1(m.roi)}x`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Orçamento (Milhões USD)', color: '#9aa1b2' },
+          ticks: { color: '#9aa1b2' },
+          grid: { color: '#1c202a' }
+        },
+        y: {
+          title: { display: true, text: 'ROI', color: '#9aa1b2' },
+          ticks: { color: '#9aa1b2' },
+          grid: { color: '#1c202a' }
+        }
+      }
+    }
+  });
+}
+
+function renderBilheteiraOrcamentoChart(data){
+  const comDados = data.filter(m => m.orcamento && m.bilheteria);
+
+  destroyChart('bilheteiraOrcamento');
+
+  if(comDados.length === 0){
+    charts.bilheteiraOrcamento = null;
+    return;
+  }
+
+  // Agrupamento por faixa de orçamento (em milhões)
+  const faixas = {
+    '< $10M': { min: 0, max: 10, filmes: [] },
+    '$10M - $30M': { min: 10, max: 30, filmes: [] },
+    '$30M - $70M': { min: 30, max: 70, filmes: [] },
+    '$70M - $150M': { min: 70, max: 150, filmes: [] },
+    '> $150M': { min: 150, max: Infinity, filmes: [] }
+  };
+
+  comDados.forEach(m => {
+    const orcMilhoes = m.orcamento / 1000000;
+    Object.entries(faixas).forEach(([label, faixa]) => {
+      if(orcMilhoes >= faixa.min && orcMilhoes < faixa.max) {
+        faixa.filmes.push(m);
+      }
+    });
+  });
+
+  const labels = Object.keys(faixas);
+  const medias = labels.map(label => {
+    const filmes = faixas[label].filmes;
+    if(filmes.length === 0) return 0;
+    return filmes.reduce((acc, f) => acc + f.bilheteria, 0) / filmes.length / 1000000;
+  });
+
+  const ctx = document.getElementById('chartBilheteiraOrcamento').getContext('2d');
+  charts.bilheteiraOrcamento = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Bilheteria Média (Milhões USD)',
+        data: medias,
+        backgroundColor: ['rgba(74,168,230,0.7)', 'rgba(230,176,74,0.7)', 'rgba(224,86,140,0.7)', 'rgba(74,201,138,0.7)', 'rgba(148,148,255,0.7)'],
+        borderColor: ['rgba(74,168,230,1)', 'rgba(230,176,74,1)', 'rgba(224,86,140,1)', 'rgba(74,201,138,1)', 'rgba(148,148,255,1)'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `Bilheteria Média: $${fmt1(ctx.parsed.x)}M`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#9aa1b2' },
+          grid: { color: '#1c202a' }
+        },
+        y: {
+          ticks: { color: '#9aa1b2' },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function renderDiretoresChart(data){
+  const comDiretor = data.filter(m => m.diretor);
+
+  destroyChart('diretores');
+
+  if(comDiretor.length === 0){
+    charts.diretores = null;
+    return;
+  }
+
+  // Contar filmes por diretor
+  const diretorMap = {};
+  comDiretor.forEach(m => {
+    if(!diretorMap[m.diretor]) diretorMap[m.diretor] = 0;
+    diretorMap[m.diretor]++;
+  });
+
+  const top10 = Object.entries(diretorMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  const labels = top10.map(([d]) => d);
+  const values = top10.map(([, count]) => count);
+
+  const ctx = document.getElementById('chartDiretores').getContext('2d');
+  charts.diretores = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Quantidade de Filmes',
+        data: values,
+        backgroundColor: 'rgba(74,168,230,0.7)',
+        borderColor: 'rgba(74,168,230,1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.parsed.x} filme(s)`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#9aa1b2' },
+          grid: { color: '#1c202a' }
+        },
+        y: {
+          ticks: { color: '#9aa1b2' },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function renderVotosNotaChart(data){
+  const comDados = data.filter(m => m.votosTemudb && m.media);
+  const ctx = document.getElementById('chartVotosNota').getContext('2d');
+
+  destroyChart('votosNota');
+
+  if(comDados.length === 0){
+    charts.votosNota = null;
+    return;
+  }
+
+  charts.votosNota = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Votos TMDB vs Nota Média (Casal)',
+        data: comDados.map(m => ({ x: m.votosTemudb, y: m.media })),
+        backgroundColor: 'rgba(230,176,74,0.6)',
+        borderColor: 'rgba(230,176,74,1)',
+        borderWidth: 1,
+        pointRadius: 5,
+        pointHoverRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => comDados[items[0].dataIndex].filme,
+            label: (ctx) => {
+              const m = comDados[ctx.dataIndex];
+              return `Votos TMDB: ${m.votosTemudb} · Nota Média: ${fmt1(m.media)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Votos TMDB', color: '#9aa1b2' },
+          ticks: { color: '#9aa1b2' },
+          grid: { color: '#1c202a' }
+        },
+        y: {
+          min: 0,
+          max: 5,
+          title: { display: true, text: 'Nota Média (Casal)', color: '#9aa1b2' },
+          ticks: { color: '#9aa1b2' },
+          grid: { color: '#1c202a' }
+        }
+      }
+    }
+  });
+}
+
 /* ===================== KPIs ===================== */
 function renderKPIs(data){
   const total = data.length;
@@ -1250,6 +1555,10 @@ function renderAll(){
   safeRun('gráfico de nota por gênero', () => renderNotaGeneroChart(filtered));
   safeRun('gráfico de dispersão', () => renderDispersaoChart(filtered));
   safeRun('gráfico de evolução', () => renderEvolucaoChart(filtered));
+  safeRun('gráfico ROI vs Orçamento', () => renderRoiBudgetChart(filtered));
+  safeRun('gráfico Bilheteria por Orçamento', () => renderBilheteiraOrcamentoChart(filtered));
+  safeRun('gráfico Top Diretores', () => renderDiretoresChart(filtered));
+  safeRun('gráfico Votos TMDB vs Nota', () => renderVotosNotaChart(filtered));
   safeRun('tabela', () => renderTable(filtered));
 }
 
