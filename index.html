@@ -1327,7 +1327,7 @@ function renderDiretoresChart(data){
 }
 
 function renderVotosNotaChart(data){
-  const comDados = data.filter(m => m.notaTmdb && m.media);
+  const comDados = data.filter(m => m.votosTemudb && m.media);
   const ctx = document.getElementById('chartVotosNota').getContext('2d');
 
   destroyChart('votosNota');
@@ -1341,8 +1341,8 @@ function renderVotosNotaChart(data){
     type: 'scatter',
     data: {
       datasets: [{
-        label: 'Nota TMDB vs Nota Média (Casal)',
-        data: comDados.map(m => ({ x: m.notaTmdb, y: m.media })),
+        label: 'Votos TMDB vs Nota Média (Casal)',
+        data: comDados.map(m => ({ x: m.votosTemudb, y: m.media })),
         backgroundColor: 'rgba(230,176,74,0.6)',
         borderColor: 'rgba(230,176,74,1)',
         borderWidth: 1,
@@ -1359,23 +1359,21 @@ function renderVotosNotaChart(data){
             title: (items) => comDados[items[0].dataIndex].filme,
             label: (ctx) => {
               const m = comDados[ctx.dataIndex];
-              return `Nota TMDB: ${fmt1(m.notaTmdb)} · Nota Média Casal: ${fmt1(m.media)}`;
+              return `Votos TMDB: ${m.votosTemudb} · Nota Média: ${fmt1(m.media)}`;
             }
           }
         }
       },
       scales: {
         x: {
-          min: 0,
-          max: 10,
-          title: { display: true, text: 'Nota TMDB (0-10)', color: '#9aa1b2' },
+          title: { display: true, text: 'Votos TMDB', color: '#9aa1b2' },
           ticks: { color: '#9aa1b2' },
           grid: { color: '#1c202a' }
         },
         y: {
           min: 0,
           max: 5,
-          title: { display: true, text: 'Nota Média (Casal 0-5)', color: '#9aa1b2' },
+          title: { display: true, text: 'Nota Média (Casal)', color: '#9aa1b2' },
           ticks: { color: '#9aa1b2' },
           grid: { color: '#1c202a' }
         }
