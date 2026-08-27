@@ -1327,31 +1327,22 @@ function renderDiretoresChart(data){
 }
 
 function renderVotosNotaChart(data){
-  const comDados = data.filter(m => m.notaTmdb && m.media);  // ← Mudou de m.votosTemudb para m.notaTmdb
-  // ... resto do código ...
-  label: 'Nota TMDB vs Nota Média (Casal)',  // ← Título atualizado
-  data: comDados.map(m => ({ x: m.notaTmdb, y: m.media })),  // ← Mudou de m.votosTemudb para m.notaTmdb
-  // ... tooltip ...
-  return `Nota TMDB: ${fmt1(m.notaTmdb)} · Nota Média Casal: ${fmt1(m.media)}`;  // ← Texto atualizado
-  // ... scales ...
-  x: {
-    min: 0,
-    max: 10,  // ← Escala TMDB é 0-10, não varia
-    title: { display: true, text: 'Nota TMDB (0-10)', color: '#9aa1b2' },  // ← Título do eixo X
-  },
-  y: {
-    min: 0,
-    max: 5,  // ← Escala do casal é 0-5
-    title: { display: true, text: 'Nota Média (Casal 0-5)', color: '#9aa1b2' },  // ← Título do eixo Y
+  const comDados = data.filter(m => m.notaTmdb && m.media);
+  const ctx = document.getElementById('chartVotosNota').getContext('2d');
+
+  destroyChart('votosNota');
+
+  if(comDados.length === 0){
+    charts.votosNota = null;
+    return;
   }
-}
 
   charts.votosNota = new Chart(ctx, {
     type: 'scatter',
     data: {
       datasets: [{
-        label: 'Votos TMDB vs Nota Média (Casal)',
-        data: comDados.map(m => ({ x: m.votosTemudb, y: m.media })),
+        label: 'Nota TMDB vs Nota Média (Casal)',
+        data: comDados.map(m => ({ x: m.notaTmdb, y: m.media })),
         backgroundColor: 'rgba(230,176,74,0.6)',
         borderColor: 'rgba(230,176,74,1)',
         borderWidth: 1,
@@ -1368,21 +1359,23 @@ function renderVotosNotaChart(data){
             title: (items) => comDados[items[0].dataIndex].filme,
             label: (ctx) => {
               const m = comDados[ctx.dataIndex];
-              return `Votos TMDB: ${m.votosTemudb} · Nota Média: ${fmt1(m.media)}`;
+              return `Nota TMDB: ${fmt1(m.notaTmdb)} · Nota Média Casal: ${fmt1(m.media)}`;
             }
           }
         }
       },
       scales: {
         x: {
-          title: { display: true, text: 'Votos TMDB', color: '#9aa1b2' },
+          min: 0,
+          max: 10,
+          title: { display: true, text: 'Nota TMDB (0-10)', color: '#9aa1b2' },
           ticks: { color: '#9aa1b2' },
           grid: { color: '#1c202a' }
         },
         y: {
           min: 0,
           max: 5,
-          title: { display: true, text: 'Nota Média (Casal)', color: '#9aa1b2' },
+          title: { display: true, text: 'Nota Média (Casal 0-5)', color: '#9aa1b2' },
           ticks: { color: '#9aa1b2' },
           grid: { color: '#1c202a' }
         }
