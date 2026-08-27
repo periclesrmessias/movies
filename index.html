@@ -1327,15 +1327,24 @@ function renderDiretoresChart(data){
 }
 
 function renderVotosNotaChart(data){
-  const comDados = data.filter(m => m.votosTemudb && m.media);
-  const ctx = document.getElementById('chartVotosNota').getContext('2d');
-
-  destroyChart('votosNota');
-
-  if(comDados.length === 0){
-    charts.votosNota = null;
-    return;
+  const comDados = data.filter(m => m.notaTmdb && m.media);  // ← Mudou de m.votosTemudb para m.notaTmdb
+  // ... resto do código ...
+  label: 'Nota TMDB vs Nota Média (Casal)',  // ← Título atualizado
+  data: comDados.map(m => ({ x: m.notaTmdb, y: m.media })),  // ← Mudou de m.votosTemudb para m.notaTmdb
+  // ... tooltip ...
+  return `Nota TMDB: ${fmt1(m.notaTmdb)} · Nota Média Casal: ${fmt1(m.media)}`;  // ← Texto atualizado
+  // ... scales ...
+  x: {
+    min: 0,
+    max: 10,  // ← Escala TMDB é 0-10, não varia
+    title: { display: true, text: 'Nota TMDB (0-10)', color: '#9aa1b2' },  // ← Título do eixo X
+  },
+  y: {
+    min: 0,
+    max: 5,  // ← Escala do casal é 0-5
+    title: { display: true, text: 'Nota Média (Casal 0-5)', color: '#9aa1b2' },  // ← Título do eixo Y
   }
+}
 
   charts.votosNota = new Chart(ctx, {
     type: 'scatter',
