@@ -531,6 +531,209 @@
   ::-webkit-scrollbar-track{ background: transparent; }
   ::-webkit-scrollbar-thumb{ background: #262b36; border-radius: 10px; }
   ::-webkit-scrollbar-thumb:hover{ background: #333a49; }
+
+  /* TOOLTIP CUSTOMIZADO (poster + título original) */
+  .custom-tooltip{
+    position: fixed;
+    z-index: 1000;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    padding: 10px;
+    width: 160px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .12s ease, transform .12s ease;
+  }
+  .custom-tooltip.visible{
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .custom-tooltip img{
+    width: 100%;
+    border-radius: 6px;
+    display: block;
+    margin-bottom: 6px;
+    background: var(--bg);
+  }
+  .custom-tooltip .tt-titulo{
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .custom-tooltip .tt-sem-poster{
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+
+  /* LINHA DA TABELA CLICÁVEL */
+  tbody tr{ cursor: pointer; }
+  tbody tr.row-active{ background: rgba(230,176,74,0.06); }
+
+  /* SEÇÃO DE DETALHES DO FILME */
+  .detail-card{
+    background: linear-gradient(160deg, var(--bg-elev), var(--bg-elev-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    display: none;
+    gap: 22px;
+  }
+  .detail-card.visible{ display: flex; }
+  .detail-card.empty{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-faint);
+    font-size: 13.5px;
+    padding: 40px 10px;
+  }
+  .detail-poster{
+    flex: 0 0 160px;
+    width: 160px;
+  }
+  .detail-poster img{
+    width: 100%;
+    border-radius: var(--radius-sm);
+    display: block;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  }
+  .detail-poster .no-poster{
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: center;
+    padding: 10px;
+  }
+  .detail-body{
+    flex: 1;
+    min-width: 0;
+  }
+  .detail-header{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .detail-title{
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .detail-close{
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .detail-close:hover{ border-color: var(--accent); color: var(--accent); }
+  .detail-subtitle{
+    font-size: 13px;
+    color: var(--text-faint);
+    margin-bottom: 14px;
+  }
+  .detail-meta-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .detail-meta-item{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .detail-meta-item .dm-label{
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-faint);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .detail-meta-item .dm-value{
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .detail-synopsis-label{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-faint);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .detail-synopsis{
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-dim);
+  }
+  .detail-notas-row{
+    display: flex;
+    gap: 18px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .detail-nota-item{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .detail-nota-item .dn-value{ font-size: 20px; font-weight: 700; }
+  .detail-nota-item .dn-label{
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .detail-trailer-link{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    background: var(--pericles);
+    color: #0a1622;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+  }
+  .detail-trailer-link:hover{ filter: brightness(1.08); }
+  @media (max-width: 640px){
+    .detail-card{ flex-direction: column; }
+    .detail-poster{ width: 100%; flex: none; max-width: 200px; }
+  }
 </style>
 </head>
 <body>
@@ -657,6 +860,14 @@
         </table>
       </div>
       <div class="table-footer" id="tableFooter"></div>
+    </div>
+  </section>
+
+  <!-- DETALHES DO FILME -->
+  <section>
+    <div class="section-title">Detalhes do filme</div>
+    <div class="detail-card empty" id="detailCard">
+      <span>Clique em uma linha da tabela para ver os detalhes do filme.</span>
     </div>
   </section>
 
@@ -1493,8 +1704,9 @@ function renderTable(data){
     return sortState.dir === 'asc' ? cmp : -cmp;
   });
 
-  sorted.forEach(m => {
+  sorted.forEach((m, i) => {
     const tr = document.createElement('tr');
+    tr.dataset.filme = m.filme;
     const statusBadge = m.visto
       ? '<span class="badge visto">Assistido</span>'
       : '<span class="badge pendente">Pendente</span>';
@@ -1504,10 +1716,13 @@ function renderTable(data){
     const imdb = m.imdb != null ? `<span class="note-imdb">${fmt1(m.imdb)}</span>` : '<span class="muted">—</span>';
     const data = m.data ? m.data : '<span class="muted">—</span>';
 
-    const tituloAttr = m.ingles ? ` title="${m.ingles.replace(/"/g, '&quot;')}"` : '';
+    const tituloEsc = m.ingles ? m.ingles.replace(/"/g, '&quot;') : '';
+    const posterEsc = m.poster ? m.poster.replace(/"/g, '&quot;') : '';
+    const dataAttrs = ` data-titulo-en="${tituloEsc}" data-poster="${posterEsc}"`;
+
     const filmeCell = m.trailer
-      ? `<a class="filme-nome filme-link" href="${m.trailer.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer"${tituloAttr}>${m.filme}</a>`
-      : `<span class="filme-nome"${tituloAttr}>${m.filme}</span>`;
+      ? `<a class="filme-nome filme-link" href="${m.trailer.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer"${dataAttrs} onclick="event.stopPropagation()">${m.filme}</a>`
+      : `<span class="filme-nome"${dataAttrs}>${m.filme}</span>`;
 
     tr.innerHTML = `
       <td>${filmeCell}</td>
@@ -1520,11 +1735,15 @@ function renderTable(data){
       <td>${imdb}</td>
       <td>${data}</td>
     `;
+    tr.addEventListener('click', () => selecionarFilme(m, tr));
     tbody.appendChild(tr);
   });
 
   document.getElementById('tableFooter').textContent =
     `Exibindo ${sorted.length} de ${DATA.length} filme${DATA.length !== 1 ? 's' : ''}`;
+
+  bindTooltipEvents();
+  reaplicarSelecaoAtiva();
 
   // update sort arrows
   document.querySelectorAll('#movieTable thead th').forEach(th => {
@@ -1534,6 +1753,148 @@ function renderTable(data){
     } else {
       arrow.textContent = '';
     }
+  });
+}
+
+/* ===================== TOOLTIP CUSTOMIZADO (poster + título original) ===================== */
+let tooltipEl = null;
+
+function getTooltipEl(){
+  if(!tooltipEl){
+    tooltipEl = document.createElement('div');
+    tooltipEl.className = 'custom-tooltip';
+    document.body.appendChild(tooltipEl);
+  }
+  return tooltipEl;
+}
+
+function posicionarTooltip(el, x, y){
+  const margem = 14;
+  const rect = el.getBoundingClientRect();
+  let left = x + margem;
+  let top = y + margem;
+
+  if(left + rect.width > window.innerWidth - 10){
+    left = x - rect.width - margem;
+  }
+  if(top + rect.height > window.innerHeight - 10){
+    top = y - rect.height - margem;
+  }
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+}
+
+function bindTooltipEvents(){
+  document.querySelectorAll('.filme-nome').forEach(el => {
+    const tituloEn = el.dataset.tituloEn;
+    const poster = el.dataset.poster;
+
+    if(!tituloEn && !poster) return;
+
+    el.addEventListener('mouseenter', (e) => {
+      const tt = getTooltipEl();
+      const posterHtml = poster
+        ? `<img src="${poster}" alt="Poster" onerror="this.style.display='none'">`
+        : `<div class="tt-sem-poster">Sem poster</div>`;
+      const tituloHtml = tituloEn ? `<div class="tt-titulo">${tituloEn}</div>` : '';
+      tt.innerHTML = posterHtml + tituloHtml;
+      posicionarTooltip(tt, e.clientX, e.clientY);
+      tt.classList.add('visible');
+    });
+
+    el.addEventListener('mousemove', (e) => {
+      posicionarTooltip(getTooltipEl(), e.clientX, e.clientY);
+    });
+
+    el.addEventListener('mouseleave', () => {
+      getTooltipEl().classList.remove('visible');
+    });
+  });
+}
+
+/* ===================== DETALHES DO FILME (clique na linha) ===================== */
+let filmeSelecionado = null;
+
+function reaplicarSelecaoAtiva(){
+  if(!filmeSelecionado) return;
+  const tr = document.querySelector(`#tableBody tr[data-filme="${CSS.escape(filmeSelecionado)}"]`);
+  if(tr) tr.classList.add('row-active');
+}
+
+function selecionarFilme(m, tr){
+  const card = document.getElementById('detailCard');
+  const jaAtivo = filmeSelecionado === m.filme;
+
+  document.querySelectorAll('#tableBody tr').forEach(r => r.classList.remove('row-active'));
+
+  if(jaAtivo){
+    filmeSelecionado = null;
+    card.classList.remove('visible');
+    card.classList.add('empty');
+    card.innerHTML = '<span>Clique em uma linha da tabela para ver os detalhes do filme.</span>';
+    return;
+  }
+
+  filmeSelecionado = m.filme;
+  tr.classList.add('row-active');
+  card.classList.remove('empty');
+  card.classList.add('visible');
+
+  const posterHtml = m.poster
+    ? `<img src="${m.poster}" alt="Poster de ${m.filme}" onerror="this.parentElement.innerHTML='<div class=&quot;no-poster&quot;>Sem poster</div>'">`
+    : `<div class="no-poster">Sem poster</div>`;
+
+  const jaVistoPartes = [];
+  jaVistoPartes.push(m.vistoG ? 'Gabrielle: já tinha visto' : 'Gabrielle: primeira vez');
+  jaVistoPartes.push(m.vistoP ? 'Péricles: já tinha visto' : 'Péricles: primeira vez');
+
+  const metaItens = [
+    { label: 'Gênero', value: m.genero || '—' },
+    { label: 'Diretor', value: m.diretor || '—' },
+    { label: 'Duração', value: m.duracao ? `${m.duracao} min` : '—' },
+    { label: 'Streaming', value: m.streaming || '—' },
+    { label: 'Status', value: m.visto ? 'Assistido' : 'Pendente' },
+    { label: 'Já visto antes', value: jaVistoPartes.join(' · ') }
+  ];
+
+  const metaHtml = metaItens.map(it => `
+    <div class="detail-meta-item">
+      <div class="dm-label">${it.label}</div>
+      <div class="dm-value">${it.value}</div>
+    </div>
+  `).join('');
+
+  const notasHtml = [];
+  if(m.notaG != null) notasHtml.push(`<div class="detail-nota-item"><div class="dn-value note-g">${fmt1(m.notaG)}</div><div class="dn-label">Gabrielle</div></div>`);
+  if(m.notaP != null) notasHtml.push(`<div class="detail-nota-item"><div class="dn-value note-p">${fmt1(m.notaP)}</div><div class="dn-label">Péricles</div></div>`);
+  if(m.media != null) notasHtml.push(`<div class="detail-nota-item"><div class="dn-value note-avg">${fmt1(m.media)}</div><div class="dn-label">Média casal</div></div>`);
+  if(m.notaTmdb != null) notasHtml.push(`<div class="detail-nota-item"><div class="dn-value" style="color:#01d277;">${fmt1(m.notaTmdb)}</div><div class="dn-label">TMDB</div></div>`);
+
+  const trailerHtml = m.trailer
+    ? `<a class="detail-trailer-link" href="${m.trailer.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer">▶ Assistir trailer</a>`
+    : '';
+
+  card.innerHTML = `
+    <div class="detail-poster">${posterHtml}</div>
+    <div class="detail-body">
+      <div class="detail-header">
+        <div class="detail-title">${m.filme}</div>
+        <button class="detail-close" type="button" title="Fechar">✕</button>
+      </div>
+      <div class="detail-subtitle">${m.ingles || ''}</div>
+      <div class="detail-meta-grid">${metaHtml}</div>
+      ${m.sinopse ? `<div class="detail-synopsis-label">Sinopse</div><div class="detail-synopsis">${m.sinopse}</div>` : ''}
+      <div class="detail-notas-row">${notasHtml.join('')}</div>
+      ${trailerHtml}
+    </div>
+  `;
+
+  card.querySelector('.detail-close').addEventListener('click', () => {
+    filmeSelecionado = null;
+    document.querySelectorAll('#tableBody tr').forEach(r => r.classList.remove('row-active'));
+    card.classList.remove('visible');
+    card.classList.add('empty');
+    card.innerHTML = '<span>Clique em uma linha da tabela para ver os detalhes do filme.</span>';
   });
 }
 
