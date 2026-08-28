@@ -1735,7 +1735,13 @@ function renderTable(data){
       <td>${imdb}</td>
       <td>${data}</td>
     `;
-    tr.addEventListener('click', () => selecionarFilme(m, tr));
+    tr.addEventListener('click', () => {
+      try{
+        selecionarFilme(m, tr);
+      } catch(e){
+        console.error('Erro ao selecionar filme "' + m.filme + '":', e);
+      }
+    });
     tbody.appendChild(tr);
   });
 
@@ -1839,6 +1845,7 @@ function selecionarFilme(m, tr){
   tr.classList.add('row-active');
   card.classList.remove('empty');
   card.classList.add('visible');
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   const posterHtml = m.poster
     ? `<img src="${m.poster}" alt="Poster de ${m.filme}" onerror="this.parentElement.innerHTML='<div class=&quot;no-poster&quot;>Sem poster</div>'">`
