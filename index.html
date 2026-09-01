@@ -85,6 +85,45 @@
   .dot.g{ background: var(--gabrielle); }
   .dot.p{ background: var(--pericles); }
 
+  .header-actions{
+    display:flex;
+    align-items:center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .btn-update{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, transform .1s ease;
+    white-space: nowrap;
+  }
+  .btn-update:hover{ border-color: var(--accent); }
+  .btn-update:active{ transform: scale(0.97); }
+  .btn-update:disabled{
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-update .icon{ display:inline-block; }
+  .btn-update.loading .icon{ animation: spin 1s linear infinite; }
+  @keyframes spin{ from{ transform: rotate(0deg); } to{ transform: rotate(360deg); } }
+  .update-status{
+    font-size: 12px;
+    color: var(--text-faint);
+    max-width: 220px;
+  }
+  .update-status.ok{ color: var(--ok); }
+  .update-status.error{ color: var(--gabrielle); }
+
   /* KPI GRID */
   .kpi-grid{
     display:grid;
@@ -744,9 +783,16 @@
       <h1>Filmes</h1>
       <div class="subtitle">Histórico e planos de filmes — Gabrielle &amp; Péricles</div>
     </div>
-    <div class="legend-pair">
-      <span><span class="dot g"></span>Gabrielle</span>
-      <span><span class="dot p"></span>Péricles</span>
+    <div class="header-actions">
+      <div class="update-status" id="updateStatus"></div>
+      <button class="btn-update" id="btnUpdate" type="button">
+        <span class="icon">🔄</span>
+        <span id="btnUpdateLabel">Atualizar</span>
+      </button>
+      <div class="legend-pair">
+        <span><span class="dot g"></span>Gabrielle</span>
+        <span><span class="dot p"></span>Péricles</span>
+      </div>
     </div>
   </header>
 
@@ -932,6 +978,11 @@
 /* ===================== CONFIG ===================== */
 // URL do CSV publicado do Google Sheets (Arquivo > Compartilhar > Publicar na web > CSV)
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7CWT6zt9MzuZ_mtNXBqrP_qUaO61Gsc8jQzCRCZcJHZmCJVDw9Fa8xSwszlxwlUn-A1qV_GtA1TdT/pub?gid=404169999&single=true&output=csv";
+
+// URL do Web App do Apps Script (Implantar > Nova implantação > App da Web) e token de proteção
+// (o mesmo valor precisa estar em Propriedades do Script como UPDATE_TOKEN)
+const UPDATE_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz7K8owinHfRgmciN14SctWiQnNe96ejciye2UL40_mEjqveug8GJdd5Ue5lDEJ2nD-/exec";
+const UPDATE_TOKEN = "6bcdd985-b901-42cd-8df2-0b73c57452d3";
 
 /* ===================== PARSER DE CSV ===================== */
 // Parser simples que respeita aspas e vírgulas/quebras de linha dentro de campos
@@ -1968,6 +2019,63 @@ document.querySelectorAll('#movieTable thead th').forEach(th => {
     renderTable(getFilteredData());
   });
 });
+
+/* ===================== ATUALIZAR VIA TMDB (Apps Script Web App) ===================== */
+async function atualizarViaTMDB(){
+  const btn = document.getElementById('btnUpdate');
+  const label = document.getElementById('btnUpdateLabel');
+  const status = document.getElementById('updateStatus');
+
+  if(!UPDATE_WEBAPP_URL || UPDATE_WEBAPP_URL.includes('COLE_AQUI')){
+    status.textContent = 'Configure a URL do Web App no código antes de usar.';
+    status.className = 'update-status error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  label.textContent = 'Atualizando...';
+  status.textContent = '';
+  status.className = 'update-status';
+
+  try{
+    const resp = await fetch(UPDATE_WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // evita preflight CORS com Apps Script
+      body: JSON.stringify({ token: UPDATE_TOKEN })
+    });
+
+    const json = await resp.json();
+
+    if(!resp.ok || !json.ok){
+      throw new Error(json.erro || ('HTTP ' + resp.status));
+    }
+
+    status.textContent = 'Atualizado com sucesso. Recarregando dados...';
+    status.classList.add('ok');
+
+    // Recarrega os dados da planilha (o CSV publicado leva alguns segundos para refletir a mudança)
+    setTimeout(async () => {
+      const rawData = await loadData();
+      DATA = preprocess(rawData);
+      populateSelect('fGenero', DATA.map(d => d.genero));
+      populateSelect('fStreaming', DATA.map(d => d.streaming));
+      renderAll();
+      status.textContent = 'Dados atualizados na tela.';
+    }, 4000);
+
+  } catch(e){
+    console.error('Erro ao atualizar via TMDB:', e);
+    status.textContent = 'Erro: ' + e.message;
+    status.classList.add('error');
+  } finally{
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    label.textContent = 'Atualizar';
+  }
+}
+
+document.getElementById('btnUpdate').addEventListener('click', atualizarViaTMDB);
 
 /* ===================== INIT ===================== */
 function showBanner(msg, isError){
